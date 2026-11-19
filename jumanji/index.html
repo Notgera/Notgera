@@ -6,200 +6,333 @@
 <title>Jumanji — Jamoaviy dars o'yini</title>
 <style>
   :root {
-    --bg1: #1b3d2f;
-    --bg2: #0b1a13;
-    --gold: #f4c542;
-    --card: #fffaf0;
-    --ink: #2a2a2a;
-    --ok: #2e9e5b;
-    --bad: #c94a3a;
+    --jungle-1: #0f3d2e;
+    --jungle-2: #05140d;
+    --gold: #ffd166;
+    --gold-2: #f4a261;
+    --paper: #fffaf0;
+    --ink: #1f2a24;
+    --ok: #2ecc71;
+    --bad: #e74c3c;
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
+
   body {
     margin: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: radial-gradient(circle at top, var(--bg1), var(--bg2));
-    color: #fff;
     min-height: 100vh;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: #f4f4ef;
+    background:
+      radial-gradient(ellipse at 15% 0%, #2c7048 0%, transparent 55%),
+      radial-gradient(ellipse at 95% 100%, #1d5a3a 0%, transparent 50%),
+      linear-gradient(180deg, var(--jungle-1), var(--jungle-2));
+    background-attachment: fixed;
+    overflow-x: hidden;
   }
-  header { text-align: center; padding: 18px 12px 6px; }
-  h1 { margin: 0; font-size: 2.2rem; color: var(--gold); letter-spacing: 3px; }
-  .subtitle { opacity: .8; margin-top: 4px; }
-  .screen { display: none; max-width: 1100px; margin: 0 auto; padding: 16px; }
-  .screen.active { display: block; }
 
-  /* ---------- Sozlash ekrani ---------- */
-  .card {
-    background: rgba(255,255,255,.07);
-    border-radius: 16px;
-    padding: 20px;
-    max-width: 560px;
-    margin: 0 auto;
+  /* ---------- Fon bargi ---------- */
+  #leaves { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .leaf {
+    position: absolute; top: -40px; opacity: .18;
+    animation: drift linear infinite;
   }
-  .card label { display: block; margin-bottom: 6px; font-weight: 600; }
+  @keyframes drift {
+    from { transform: translateY(0) rotate(0deg); }
+    to   { transform: translateY(120vh) rotate(360deg); }
+  }
+
+  header { position: relative; z-index: 1; text-align: center; padding: 28px 12px 8px; }
+  h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    font-weight: 900;
+    letter-spacing: 6px;
+    background: linear-gradient(180deg, #fff1b8, #f4a261);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 0 #5a3412);
+  }
+  .subtitle {
+    margin-top: 8px;
+    font-size: .8rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: .7;
+  }
+
+  .screen { position: relative; z-index: 1; display: none; max-width: 1120px; margin: 0 auto; padding: 16px; }
+  .screen.active { display: block; animation: fadeUp .4s ease-out; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ---------- Sozlash ---------- */
+  .card {
+    max-width: 600px;
+    margin: 12px auto;
+    padding: 28px;
+    border-radius: 24px;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.15);
+    box-shadow: 0 25px 60px rgba(0,0,0,.35);
+    backdrop-filter: blur(10px);
+  }
+  .card h2.title { margin: 0 0 18px; font-size: 1.5rem; text-align: center; color: var(--gold); }
+  .card label { display: block; margin: 0 0 6px; font-weight: 700; font-size: .95rem; opacity: .9; }
   select, input[type="text"] {
     font: inherit;
-    padding: 10px;
-    border-radius: 8px;
-    border: 0;
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 2px solid transparent;
     background: #fff;
     color: var(--ink);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
   }
-  .team-row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+  select:focus, input[type="text"]:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 4px rgba(255,209,102,.25);
+  }
+  .team-row {
+    display: flex; gap: 10px; align-items: center;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 16px;
+    background: rgba(0,0,0,.18);
+  }
   .team-row .num-badge {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--gold); color: #222; font-weight: 700;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 32px; height: 32px; flex-shrink: 0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; color: #3a2300;
+    background: linear-gradient(180deg, #fff1b8, #f4a261);
+    box-shadow: 0 3px 0 #b86b1f;
   }
   .team-row input[type="text"] { flex: 1; min-width: 0; }
-  .team-row select { font-size: 1.4rem; padding: 6px; }
-  .setup-msg { color: #ffb4a8; min-height: 1.4em; margin-top: 10px; }
+  .team-row select { font-size: 1.5rem; padding: 4px 8px; }
+  .setup-msg { color: #ffb3a8; min-height: 1.4em; margin-top: 12px; text-align: center; font-weight: 600; }
 
   /* ---------- Tugmalar ---------- */
   button {
     font: inherit;
-    font-weight: 600;
+    font-weight: 800;
+    letter-spacing: .3px;
     border: 0;
-    border-radius: 10px;
-    padding: 12px 18px;
+    border-radius: 14px;
+    padding: 13px 20px;
     cursor: pointer;
     color: #fff;
-    background: #46634f;
+    background: #3b5b47;
+    box-shadow: 0 4px 0 rgba(0,0,0,.35);
+    transition: transform .1s, box-shadow .1s, filter .2s, opacity .2s;
   }
-  button:hover:not(:disabled) { filter: brightness(1.1); }
-  button:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-gold { background: var(--gold); color: #222; }
-  .btn-ok { background: var(--ok); }
-  .btn-bad { background: var(--bad); }
-  .btn-ghost { background: rgba(255,255,255,.12); }
+  button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.08); }
+  button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+  button:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+  .btn-gold { background: linear-gradient(180deg, #ffe38a, #f4a261); color: #3a2300; box-shadow: 0 4px 0 #b86b1f; }
+  .btn-ok   { background: linear-gradient(180deg, #5ee39a, #25a35c); box-shadow: 0 4px 0 #17703c; }
+  .btn-bad  { background: linear-gradient(180deg, #ff8a7a, #d8432f); box-shadow: 0 4px 0 #9c2a1b; }
+  .btn-ghost { background: rgba(255,255,255,.12); box-shadow: none; }
+  .btn-ghost:active:not(:disabled) { box-shadow: none; }
+  .center { text-align: center; margin-top: 16px; }
 
-  /* ---------- O'yin ekrani ---------- */
+  /* ---------- O'yin ---------- */
   .game-grid {
     display: grid;
-    grid-template-columns: minmax(300px, 1.2fr) minmax(280px, 1fr);
-    gap: 16px;
+    grid-template-columns: minmax(300px, 1.2fr) minmax(290px, 1fr);
+    gap: 18px;
     align-items: start;
   }
-  @media (max-width: 760px) { .game-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 800px) { .game-grid { grid-template-columns: 1fr; } }
 
+  /* Yog'och taxta */
   .board {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-    padding: 10px;
-    background: #3b2a14;
-    border: 4px solid #c08a3e;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    gap: 8px;
+    padding: 14px;
+    background: linear-gradient(145deg, #8a5a2b, #4a2d12);
+    border: 6px solid #c08a3e;
+    border-radius: 24px;
+    box-shadow: inset 0 0 0 3px #5a3412, 0 22px 45px rgba(0,0,0,.5);
   }
   .cell {
     position: relative;
     aspect-ratio: 1 / 1;
-    border-radius: 10px;
-    background: #5e8a35;
-    border: 2px solid rgba(0,0,0,.25);
+    border-radius: 14px;
+    background: radial-gradient(circle at 30% 25%, #b8e07a, #5e9a3c 60%, #3f6e2a);
+    box-shadow: inset 0 -5px 0 rgba(0,0,0,.2), 0 3px 6px rgba(0,0,0,.3);
     overflow: hidden;
   }
-  .cell.alt { background: #7aa447; }
-  .cell.start, .cell.finish { background: var(--gold); color: #222; }
-  .cell .label {
-    position: absolute; top: 3px; left: 5px;
-    font-size: .65rem; font-weight: 700; opacity: .85;
+  .cell.alt { background: radial-gradient(circle at 30% 25%, #d6ef9a, #7fb24f 60%, #4f8535); }
+  .cell.start, .cell.finish {
+    background: radial-gradient(circle at 30% 25%, #fff3b0, #ffd166 60%, #e0a030);
   }
-  .cell.start .label, .cell.finish .label { opacity: 1; }
+  .cell.finish { animation: glow 1.6s ease-in-out infinite alternate; }
+  @keyframes glow {
+    to { box-shadow: inset 0 -5px 0 rgba(0,0,0,.15), 0 0 22px 4px rgba(255,209,102,.8); }
+  }
+  .label {
+    position: absolute; top: 4px; left: 6px;
+    font-size: .62rem; font-weight: 800;
+    color: rgba(0,0,0,.5);
+  }
+  .cell.start .label, .cell.finish .label { color: #5a3412; }
   .tokens {
     position: absolute; inset: 0;
     display: flex; flex-wrap: wrap;
     align-items: center; justify-content: center;
-    padding-top: 10px;
-    font-size: clamp(1rem, 3vw, 1.7rem);
+    padding-top: 8px;
+    font-size: clamp(1rem, 3.2vw, 1.8rem);
+    filter: drop-shadow(0 3px 2px rgba(0,0,0,.4));
   }
-  .tok { transition: transform .2s; }
   .tok.active { animation: bounce .6s infinite alternate; }
-  @keyframes bounce { to { transform: translateY(-4px) scale(1.2); } }
+  @keyframes bounce { to { transform: translateY(-5px) scale(1.2); } }
 
+  /* Boshqaruv paneli */
   .panel {
-    background: rgba(255,255,255,.07);
-    border-radius: 16px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    padding: 18px;
+    border-radius: 24px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.12);
+    backdrop-filter: blur(8px);
+    display: flex; flex-direction: column; gap: 14px;
   }
-  .turn { text-align: center; }
-  .turn .small { opacity: .75; font-size: .9rem; }
-  .turn .team { font-size: 1.6rem; font-weight: 800; color: var(--gold); margin-top: 4px; }
-  .dice-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
-  .dice { font-size: 3.5rem; line-height: 1; }
-  .dice-num { font-size: 1rem; opacity: .9; }
-  .dice-num b { font-size: 1.6rem; color: var(--gold); }
-
-  .question {
-    background: var(--card);
-    color: var(--ink);
-    border-radius: 14px;
-    padding: 16px;
-    min-height: 120px;
-  }
-  .qtext { font-size: 1.25rem; font-weight: 600; margin: 0; line-height: 1.4; }
-  .qanswer {
-    margin-top: 10px; padding: 8px 10px;
-    background: #e8f5e9; color: #1b5e20; border-radius: 8px;
-  }
-  .qhint { margin-top: 8px; font-size: .85rem; color: #666; }
-
-  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btns button { flex: 1; min-width: 110px; }
-
-  #msg {
-    min-height: 1.5em;
+  .turn {
     text-align: center;
-    font-weight: 700;
-    color: var(--gold);
+    padding: 12px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255,209,102,.2), rgba(255,209,102,.04));
+    border: 1px solid rgba(255,209,102,.35);
   }
+  .turn .small { font-size: .75rem; letter-spacing: 2px; text-transform: uppercase; opacity: .75; }
+  .turn .team { font-size: 1.6rem; font-weight: 900; color: var(--gold); margin-top: 4px; }
+
+  .dice-row { display: flex; align-items: center; justify-content: center; gap: 16px; }
+  .dice-box {
+    width: 92px; height: 92px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.8rem; line-height: 1; color: #222;
+    border-radius: 22px;
+    background: linear-gradient(145deg, #ffffff, #dcdcdc);
+    box-shadow: inset 0 -6px 0 #bdbdbd, 0 12px 22px rgba(0,0,0,.45);
+  }
+  .dice-box.rolling { animation: shake .45s infinite; }
+  @keyframes shake {
+    0%, 100% { transform: rotate(-10deg); }
+    50%      { transform: rotate(10deg) scale(1.05); }
+  }
+  .dice-num { font-size: .95rem; opacity: .9; }
+  .dice-num b { display: block; font-size: 2rem; color: var(--gold); line-height: 1.1; }
+
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btns button { flex: 1; min-width: 120px; }
+  .btns.single button { width: 100%; }
+
+  /* Savol kartasi (qog'oz ko'rinishida) */
+  .question {
+    position: relative;
+    min-height: 130px;
+    padding: 20px 22px 18px;
+    border-radius: 18px;
+    background: var(--paper);
+    color: var(--ink);
+    border-top: 6px solid var(--gold);
+    box-shadow: 0 12px 28px rgba(0,0,0,.35);
+  }
+  .question.anim { animation: fadeUp .4s ease-out; }
+  .qtext { margin: 0; font-size: 1.3rem; font-weight: 700; line-height: 1.4; }
+  .qanswer {
+    margin-top: 12px; padding: 9px 12px;
+    border-radius: 10px;
+    background: #dff5e6; color: #1b5e2f; font-weight: 700;
+  }
+  .qhint {
+    display: inline-block; margin-top: 12px;
+    padding: 5px 12px; border-radius: 99px;
+    background: #1f5f3a; color: #fff; font-size: .8rem; font-weight: 600;
+  }
+  .qhint:empty { display: none; }
+
+  /* Xabar banneri */
+  #msg {
+    min-height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 14px;
+    border-radius: 14px;
+    text-align: center; font-weight: 800;
+    background: rgba(255,255,255,.06);
+    color: var(--gold);
+    transition: background .3s, color .3s;
+  }
+  #msg.ok  { background: rgba(46,204,113,.22); color: #9ff3c0; }
+  #msg.bad { background: rgba(231,76,60,.22); color: #ffc2b9; }
 
   .winner {
+    padding: 18px;
+    border-radius: 20px;
     text-align: center;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--gold);
-    background: rgba(244,197,66,.12);
-    border-radius: 12px;
-    padding: 14px;
+    font-size: 1.4rem; font-weight: 900;
+    color: #3a2300;
+    background: linear-gradient(135deg, #ffe38a, #f4a261);
+    box-shadow: 0 10px 30px rgba(255,209,102,.4);
+    animation: pulse 1.2s infinite alternate;
   }
+  @keyframes pulse { to { transform: scale(1.04); } }
 
-  h2 { margin: 0 0 4px; font-size: 1.1rem; color: var(--gold); }
+  /* Natijalar */
+  h2.sec { margin: 0 0 8px; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
   ul.score { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
   ul.score li {
-    background: rgba(0,0,0,.2);
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 2px solid transparent;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(0,0,0,.25);
+    border: 2px solid rgba(255,255,255,.05);
+    transition: border-color .3s, box-shadow .3s;
   }
-  ul.score li.current { border-color: var(--gold); }
-  .sc-head { font-weight: 700; }
+  ul.score li.current { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,209,102,.2); }
+  .sc-head { font-weight: 800; }
   .bar {
-    height: 10px; margin: 6px 0 2px;
-    background: rgba(255,255,255,.15);
-    border-radius: 6px; overflow: hidden;
+    height: 12px; margin: 7px 0 4px;
+    border-radius: 99px; overflow: hidden;
+    background: rgba(255,255,255,.12);
   }
-  .fill { height: 100%; background: var(--gold); transition: width .3s; }
-  ul.score small { opacity: .8; }
+  .fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, #ffd166, #f4a261);
+    transition: width .4s ease;
+  }
+  ul.score small { opacity: .75; }
   .footer-btns { display: flex; justify-content: flex-end; }
+
+  /* Konfetti */
+  .confetti {
+    position: fixed; top: -20px; z-index: 9;
+    width: 10px; height: 14px; border-radius: 3px;
+    pointer-events: none;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); }
+  }
 </style>
 </head>
 <body>
 
+<div id="leaves"></div>
+
 <header>
-  <h1>🌿 JUMANJI 🦁</h1>
-  <div class="subtitle">Jamoaviy dars o'yini</div>
+  <h1>JUMANJI</h1>
+  <div class="subtitle">🦁 Jamoaviy dars o'yini 🌴</div>
 </header>
 
 <!-- ============ 1-EKRAN: SOZLASH ============ -->
 <section id="setup" class="screen active">
   <div class="card">
-    <h2 style="font-size:1.4rem">Jamoa sozlamalari</h2>
+    <h2 class="title">Jamoa sozlamalari</h2>
 
     <label for="teamCount">Jamoalar soni</label>
     <select id="teamCount">
@@ -213,7 +346,7 @@
     <div id="teamRows"></div>
 
     <div class="setup-msg" id="setupMsg"></div>
-    <div style="text-align:center; margin-top:10px;">
+    <div class="center">
       <button class="btn-gold" id="startBtn">▶ O'yinni boshlash</button>
     </div>
   </div>
@@ -223,28 +356,26 @@
 <section id="game" class="screen">
   <div class="game-grid">
 
-    <!-- Chap: o'yin taxtasi -->
     <div>
       <div class="board" id="board"></div>
     </div>
 
-    <!-- O'ng: boshqaruv paneli -->
     <div class="panel">
       <div class="turn">
-        <div class="small">Navbat:</div>
+        <div class="small">Navbat</div>
         <div class="team" id="turnTeam">—</div>
       </div>
 
       <div class="dice-row">
-        <div class="dice" id="dice">🎲</div>
-        <div class="dice-num" id="diceNum">Tushgan son: <b>–</b></div>
+        <div class="dice-box" id="dice">🎲</div>
+        <div class="dice-num">Tushgan son<b id="diceNum">–</b></div>
       </div>
 
-      <div class="btns">
+      <div class="btns single">
         <button class="btn-gold" id="rollBtn">🎲 Zarni tashlash</button>
       </div>
 
-      <div class="question">
+      <div class="question" id="qCard">
         <p class="qtext" id="qText">Zarni tashlang — savol shu yerda chiqadi.</p>
         <div class="qanswer" id="qAnswer" hidden></div>
         <div class="qhint" id="qHint"></div>
@@ -254,7 +385,7 @@
         <button class="btn-ok" id="okBtn" disabled>✅ To'g'ri</button>
         <button class="btn-bad" id="badBtn" disabled>❌ Noto'g'ri</button>
       </div>
-      <div class="btns">
+      <div class="btns single">
         <button class="btn-ghost" id="revealBtn" disabled>👁 Javobni ko'rsatish</button>
       </div>
 
@@ -265,7 +396,7 @@
       </div>
 
       <div>
-        <h2>Natijalar</h2>
+        <h2 class="sec">Natijalar</h2>
         <ul class="score" id="scoreList"></ul>
       </div>
 
@@ -303,6 +434,7 @@ const CELLS = 36;                 // taxtadagi katakchalar soni (6 x 6)
 const FINISH = CELLS - 1;         // finish katakcha indeksi
 const FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 const STEP_DELAY = 350;           // har bir qadam orasidagi kutish (ms)
+const LEAF_ICONS = ["🌿", "🍃", "🌴", "🍂", "🌱"];
 
 /* ---------- Holat ---------- */
 let state = null;                 // { teams, current, phase, dice, question, winner }
@@ -324,7 +456,33 @@ function show(screenId) {
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === screenId));
 }
 
-function setMsg(text) { $("msg").textContent = text; }
+/* kind: "ok" (yashil), "bad" (qizil) yoki bo'sh (oddiy) */
+function setMsg(text, kind = "") {
+  const el = $("msg");
+  el.textContent = text;
+  el.className = kind;
+}
+
+function replayAnim(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;          // animatsiyani qayta boshlash uchun
+  el.classList.add(cls);
+}
+
+/* ---------- Dekor: uchib yuruvchi barglar ---------- */
+function makeLeaves() {
+  const box = $("leaves");
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement("span");
+    s.className = "leaf";
+    s.textContent = LEAF_ICONS[i % LEAF_ICONS.length];
+    s.style.left = Math.random() * 100 + "vw";
+    s.style.fontSize = (18 + Math.random() * 18) + "px";
+    s.style.animationDuration = (16 + Math.random() * 14) + "s";
+    s.style.animationDelay = (-Math.random() * 25) + "s";
+    box.appendChild(s);
+  }
+}
 
 /* ---------- Sozlash ekrani ---------- */
 function renderSetup() {
@@ -482,16 +640,18 @@ function rollDice() {
   render();
 
   const diceEl = $("dice");
+  diceEl.classList.add("rolling");
   let ticks = 0;
   const timer = setInterval(() => {
     diceEl.textContent = FACES[Math.floor(Math.random() * 6)];
     ticks++;
     if (ticks >= 12) {
       clearInterval(timer);
+      diceEl.classList.remove("rolling");
       const n = 1 + Math.floor(Math.random() * 6);   // 1 dan 6 gacha
       state.dice = n;
       diceEl.textContent = FACES[n - 1];
-      $("diceNum").innerHTML = `Tushgan son: <b>${n}</b>`;
+      $("diceNum").textContent = n;
       askQuestion();
     }
   }, 70);
@@ -513,6 +673,7 @@ function askQuestion() {
   $("qAnswer").textContent = "Javob: " + state.question.a;
   $("qAnswer").hidden = true;
   $("qHint").textContent = `To'g'ri javob bo'lsa token ${state.dice} qadam yuradi.`;
+  replayAnim($("qCard"), "anim");
 
   render();
   setMsg(`${state.teams[state.current].name} javob bermoqda...`);
@@ -527,7 +688,7 @@ async function answer(correct) {
   const team = state.teams[state.current];
 
   if (correct) {
-    setMsg(`✅ To'g'ri! ${team.name} ${state.dice} qadam yuradi.`);
+    setMsg(`✅ To'g'ri! ${team.name} ${state.dice} qadam yuradi.`, "ok");
     for (let i = 0; i < state.dice && team.pos < FINISH; i++) {
       team.pos++;
       renderBoard();
@@ -539,7 +700,7 @@ async function answer(correct) {
       return;
     }
   } else {
-    setMsg(`❌ Noto'g'ri. ${team.name} joyida qoladi.`);
+    setMsg(`❌ Noto'g'ri. ${team.name} joyida qoladi.`, "bad");
   }
 
   await sleep(1200);
@@ -553,7 +714,7 @@ function nextTurn() {
   state.question = null;
 
   $("dice").textContent = "🎲";
-  $("diceNum").innerHTML = "Tushgan son: <b>–</b>";
+  $("diceNum").textContent = "–";
   $("qText").textContent = "Zarni tashlang — savol shu yerda chiqadi.";
   $("qAnswer").hidden = true;
   $("qHint").textContent = "";
@@ -570,8 +731,24 @@ function finishGame(team) {
   $("qText").textContent = "O'yin tugadi!";
   $("qAnswer").hidden = true;
   $("qHint").textContent = "";
-  setMsg("🎉 Tabriklaymiz!");
+  setMsg("🎉 Tabriklaymiz!", "ok");
   render();
+  confetti();
+}
+
+/* ---------- G'olib konfetti ---------- */
+function confetti() {
+  const colors = ["#ffd166", "#f4a261", "#2ecc71", "#e74c3c", "#3498db", "#ff6fb1"];
+  for (let i = 0; i < 120; i++) {
+    const p = document.createElement("span");
+    p.className = "confetti";
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.background = colors[i % colors.length];
+    p.style.animationDuration = (2 + Math.random() * 2.5) + "s";
+    p.style.animationDelay = (Math.random() * 0.8) + "s";
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 5000);
+  }
 }
 
 /* ---------- Yangi o'yin ---------- */
@@ -581,7 +758,7 @@ function newGame() {
   questionBag = [];
   cellEls.forEach(el => { el.textContent = ""; });
   $("dice").textContent = "🎲";
-  $("diceNum").innerHTML = "Tushgan son: <b>–</b>";
+  $("diceNum").textContent = "–";
   $("qText").textContent = "Zarni tashlang — savol shu yerda chiqadi.";
   $("qAnswer").hidden = true;
   $("qHint").textContent = "";
@@ -606,6 +783,7 @@ $("newBtn").addEventListener("click", newGame);
 if (QUESTIONS.length === 0) {
   $("setupMsg").textContent = "Diqqat: savollar ro'yxati bo'sh.";
 }
+makeLeaves();
 buildBoard();
 renderSetup();
 </script>
