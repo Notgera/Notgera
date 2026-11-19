@@ -1145,7 +1145,25 @@ function scheduler() {
   }
 }
 
+/* Asosiy musiqa: audio/jumanji-10s.mp3 (takrorlanadi). Fayl topilmasa, nog'ora zaxira bo'ladi. */
+const BG_TRACK = "audio/jumanji-10s.mp3";
+
 function startMusic() {
+  if (!SND.on) return;
+  if (!SND.bgFailed) {
+    if (!SND.bg) {
+      SND.bg = new Audio(BG_TRACK);
+      SND.bg.loop = true;
+      SND.bg.volume = 0.5;
+      SND.bg.onerror = () => { SND.bgFailed = true; SND.bg = null; startDrumLoop(); };
+    }
+    SND.bg.play().catch(() => { /* fayl yuklanmasa onerror zaxirani yoqadi */ });
+    return;
+  }
+  startDrumLoop();
+}
+
+function startDrumLoop() {
   if (!SND.on || !sndInit()) return;
   if (SND.ctx.state === "suspended") SND.ctx.resume();
   if (SND.timer) return;
@@ -1155,6 +1173,7 @@ function startMusic() {
 }
 
 function stopMusic() {
+  if (SND.bg) SND.bg.pause();
   if (SND.timer) { clearInterval(SND.timer); SND.timer = null; }
 }
 
