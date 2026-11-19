@@ -383,11 +383,45 @@
   @keyframes fall {
     to { transform: translateY(110vh) rotate(720deg); }
   }
+  /* ---------- Vaqt chegarasi, maxsus katakchalar, katta rejim ---------- */
+  .timer {
+    position: relative; height: 26px; border-radius: 99px; overflow: hidden;
+    background: rgba(0,0,0,.35);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: .85rem;
+  }
+  .timer-fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #2ecc71, #ffd166); }
+  .timer.low .timer-fill { background: linear-gradient(90deg, #e74c3c, #ff8a7a); }
+  .timer span { position: relative; text-shadow: 0 1px 2px #000; }
+  .cell .spec { position: absolute; top: 2px; right: 4px; font-size: .9rem; z-index: 1; filter: drop-shadow(0 1px 1px #000); }
+  .cell.sp-up   { box-shadow: inset 0 0 0 2px #7cff9b, inset 0 -5px 0 rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.55); }
+  .cell.sp-down { box-shadow: inset 0 0 0 2px #ff6b5b, inset 0 -5px 0 rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.55); }
+  .cell.sp-skip { box-shadow: inset 0 0 0 2px #8ec5ff, inset 0 -5px 0 rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.55); }
+  .big-toggle { position: fixed; top: 12px; right: 12px; z-index: 20; padding: 8px 12px; font-size: .85rem; }
+
+  body.big .qtext { font-size: 1.9rem; }
+  body.big .turn .team { font-size: 2.4rem; }
+  body.big .turn .small { font-size: 1rem; }
+  body.big .dice-num { font-size: 1.2rem; }
+  body.big .dice-num b { font-size: 3rem; }
+  body.big button { font-size: 1.25rem; padding: 16px 22px; }
+  body.big #msg { font-size: 1.4rem; min-height: 70px; }
+  body.big .sc-head { font-size: 1.3rem; }
+  body.big ul.score small { font-size: 1rem; }
+  body.big h2.sec { font-size: 1.3rem; }
+  body.big .label { font-size: 1rem; }
+  body.big .spec { font-size: 1.2rem; }
+  body.big .tokens { font-size: clamp(1.3rem, 3.5vw, 2.2rem); }
+  body.big .timer { height: 34px; font-size: 1.2rem; }
+  body.big .winner { font-size: 2.2rem; }
+  body.big .qhint { font-size: 1.1rem; }
+  body.big label, body.big select, body.big input { font-size: 1.2rem; }
 </style>
 </head>
 <body>
 
 <div id="leaves"></div>
+<button class="btn-ghost big-toggle" id="bigBtn">🔍 Katta shrift</button>
 
 <header>
   <h1>JUMANJI</h1>
@@ -446,6 +480,11 @@
         <div class="qhint" id="qHint"></div>
       </div>
 
+      <div class="timer" id="timerBox" hidden>
+        <div class="timer-fill" id="timerFill"></div>
+        <span id="timerSec"></span>
+      </div>
+
       <div class="btns">
         <button class="btn-ok" id="okBtn" disabled>✅ To'g'ri</button>
         <button class="btn-bad" id="badBtn" disabled>❌ Noto'g'ri</button>
@@ -497,6 +536,16 @@ const FINISH = CELLS - 1;         // finish katakcha indeksi
 const FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 const STEP_DELAY = 350;           // har bir qadam orasidagi kutish (ms)
 const LEAF_ICONS = ["🌿", "🍃", "🌴", "🍂", "🌱"];
+const TIME_LIMIT = 30;           // savolga javob berish vaqti (soniya)
+/* Maxsus katakchalar: indeks -> tur. up = +katak, down = -katak, skip = bir navbat o'tkazib yuboriladi */
+const SPECIALS = {
+  5:  { type: "up",   icon: "🦁", delta: 3,  text: "Sher sakradi! +3 katak" },
+  9:  { type: "down", icon: "🐍", delta: -3, text: "Ilon chaqdi! -3 katak" },
+  14: { type: "skip", icon: "🌪", text: "Bo'ron! Bir navbat o'tkazib yuboriladi" },
+  19: { type: "up",   icon: "🦁", delta: 3,  text: "Sher sakradi! +3 katak" },
+  23: { type: "down", icon: "🐍", delta: -3, text: "Ilon chaqdi! -3 katak" },
+  28: { type: "skip", icon: "🌪", text: "Bo'ron! Bir navbat o'tkazib yuboriladi" },
+};
 
 /* ---------- Taxta burchaklaridagi 4 ta tarixiy joy ----------
    name: nomi (sarlavha sifatida)
@@ -689,6 +738,15 @@ function buildBoard() {
       const tk = document.createElement("div");
       tk.className = "tokens";
 
+      const sp = SPECIALS[idx];
+      if (sp) {
+        cell.classList.add("sp-" + sp.type);
+        const ic = document.createElement("span");
+        ic.className = "spec";
+        ic.textContent = sp.icon;
+        ic.title = sp.text;
+        cell.appendChild(ic);
+      }
       cell.append(label, tk);
       board.appendChild(cell);
       cellEls[idx] = tk;
@@ -772,6 +830,7 @@ function render() {
   $("newBtn").disabled = p === "rolling" || p === "busy";
 
   $("winnerBox").hidden = p !== "over";
+  $("timerBox").hidden = p !== "question";
 
   renderBoard();
   renderScore();
@@ -816,14 +875,16 @@ function askQuestion() {
   $("qText").textContent = state.question.q;
   $("qHint").textContent = `To'g'ri javob bo'lsa token ${state.dice} qadam yuradi.`;
   replayAnim($("qCard"), "anim");
+  startTimer();
 
   render();
   setMsg(`${state.teams[state.current].name} javob bermoqda...`);
 }
 
 /* ---------- Javob (to'g'ri / noto'g'ri) ---------- */
-async function answer(correct) {
+async function answer(correct, timedOut = false) {
   if (!state || state.phase !== "question") return;
+  stopTimer();
   state.phase = "busy";
   render();
 
@@ -841,16 +902,89 @@ async function answer(correct) {
       finishGame(team);
       return;
     }
+    await applySpecial(team);
+    if (team.pos >= FINISH) {
+      finishGame(team);
+      return;
+    }
   } else {
-    setMsg(`❌ Noto'g'ri. ${team.name} joyida qoladi.`, "bad");
+    setMsg(timedOut
+      ? `⏰ Vaqt tugadi! ${team.name} joyida qoladi.`
+      : `❌ Noto'g'ri. ${team.name} joyida qoladi.`, "bad");
   }
 
   await sleep(1200);
   nextTurn();
 }
 
+/* Token maxsus katakchaga tushsa, ta'sirini qo'llash */
+async function applySpecial(team) {
+  const sp = SPECIALS[team.pos];
+  if (!sp) return;
+  await sleep(600);
+  if (sp.type === "skip") {
+    team.skip = true;
+    setMsg(`${sp.icon} ${team.name}: ${sp.text}`, "bad");
+  } else {
+    team.pos = Math.max(0, Math.min(FINISH, team.pos + sp.delta));
+    renderBoard();
+    renderScore();
+    setMsg(`${sp.icon} ${team.name}: ${sp.text}`, sp.type === "up" ? "ok" : "bad");
+  }
+  await sleep(900);
+}
+
+/* ---------- Vaqt chegarasi ---------- */
+let timerId = null;
+
+function startTimer() {
+  stopTimer();
+  const end = Date.now() + TIME_LIMIT * 1000;
+  const fill = $("timerFill");
+  const txt = $("timerSec");
+  const box = $("timerBox");
+  box.classList.remove("low");
+
+  const tick = () => {
+    const left = Math.max(0, end - Date.now());
+    fill.style.width = (left / (TIME_LIMIT * 1000) * 100) + "%";
+    txt.textContent = Math.ceil(left / 1000) + " s";
+    box.classList.toggle("low", left <= 5000);
+    if (left <= 0) {
+      stopTimer();
+      answer(false, true);
+    }
+  };
+  tick();
+  timerId = setInterval(tick, 100);
+}
+
+function stopTimer() {
+  if (timerId !== null) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+}
+
+/* ---------- Katta shrift rejimi (eslab qolinadi) ---------- */
+function toggleBig() {
+  document.body.classList.toggle("big");
+  try {
+    localStorage.setItem("jumanjiBig", document.body.classList.contains("big") ? "1" : "0");
+  } catch (e) { /* saqlab bo'lmasa ham o'yin ishlayveradi */ }
+}
+
 function nextTurn() {
-  state.current = (state.current + 1) % state.teams.length;
+  // Bo'ron tushgan jamoa navbatini bir marta o'tkazib yuboradi
+  const n = state.teams.length;
+  let next = (state.current + 1) % n;
+  let skipped = null;
+  if (state.teams[next].skip) {
+    state.teams[next].skip = false;
+    skipped = state.teams[next].name;
+    next = (next + 1) % n;
+  }
+  state.current = next;
   state.phase = "roll";
   state.dice = 0;
   state.question = null;
@@ -862,7 +996,9 @@ function nextTurn() {
 
   render();
   const t = state.teams[state.current];
-  setMsg(`Navbat: ${t.name}. Zarni tashlang!`);
+  setMsg(skipped
+    ? `🌪 ${skipped} o'tkazib yuborildi. Navbat: ${t.name}`
+    : `Navbat: ${t.name}. Zarni tashlang!`);
 }
 
 function finishGame(team) {
@@ -894,6 +1030,7 @@ function confetti() {
 /* ---------- Yangi o'yin ---------- */
 function newGame() {
   if (state && state.phase !== "over" && !confirm("Yangi o'yin boshlansinmi? Joriy natijalar o'chadi.")) return;
+  stopTimer();
   state = null;
   questionBag = [];
   cellEls.forEach(el => { el.textContent = ""; });
@@ -914,6 +1051,10 @@ $("rollBtn").addEventListener("click", rollDice);
 $("okBtn").addEventListener("click", () => answer(true));
 $("badBtn").addEventListener("click", () => answer(false));
 $("newBtn").addEventListener("click", newGame);
+$("bigBtn").addEventListener("click", toggleBig);
+try {
+  if (localStorage.getItem("jumanjiBig") === "1") document.body.classList.add("big");
+} catch (e) { /* ignore */ }
 
 if (QUESTIONS.length === 0) {
   $("setupMsg").textContent = "Diqqat: savollar ro'yxati bo'sh.";
