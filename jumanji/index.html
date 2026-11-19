@@ -154,22 +154,29 @@
     grid-template-columns: repeat(6, 1fr);
     gap: 8px;
     padding: 14px;
-    background: linear-gradient(145deg, #8a5a2b, #4a2d12);
-    border: 6px solid #c08a3e;
-    border-radius: 24px;
-    box-shadow: inset 0 0 0 3px #5a3412, 0 22px 45px rgba(0,0,0,.5);
+    background:
+      radial-gradient(circle at 10px 10px, #f3d58a 0 6px, #8a6420 7px 8px, transparent 9px),
+      radial-gradient(circle at calc(100% - 10px) 10px, #f3d58a 0 6px, #8a6420 7px 8px, transparent 9px),
+      radial-gradient(circle at 10px calc(100% - 10px), #f3d58a 0 6px, #8a6420 7px 8px, transparent 9px),
+      radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #f3d58a 0 6px, #8a6420 7px 8px, transparent 9px),
+      repeating-linear-gradient(92deg, rgba(0,0,0,.10) 0 2px, transparent 2px 11px),
+      repeating-linear-gradient(88deg, rgba(255,220,150,.04) 0 1px, transparent 1px 23px),
+      linear-gradient(145deg, #6b4220, #2e1a0b);
+    border: 3px solid #b8903f;
+    border-radius: 18px;
+    box-shadow: inset 0 0 0 2px #2a170a, inset 0 0 0 5px #8a6420, inset 0 0 30px rgba(0,0,0,.6), 0 24px 50px rgba(0,0,0,.6);
   }
   .cell {
     position: relative;
     aspect-ratio: 1 / 1;
     border-radius: 14px;
-    background: radial-gradient(circle at 30% 25%, #b8e07a, #5e9a3c 60%, #3f6e2a);
-    box-shadow: inset 0 -5px 0 rgba(0,0,0,.2), 0 3px 6px rgba(0,0,0,.3);
+    background: radial-gradient(circle at 30% 25%, #4f7a3e, #2c4a24 70%, #1a2e16);
+    box-shadow: inset 0 0 0 1px rgba(232,194,122,.55), inset 0 0 0 3px rgba(0,0,0,.25), inset 0 -5px 0 rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.55);
     overflow: hidden;
   }
-  .cell.alt { background: radial-gradient(circle at 30% 25%, #d6ef9a, #7fb24f 60%, #4f8535); }
+  .cell.alt { background: radial-gradient(circle at 30% 25%, #7a5a2c, #4a3218 70%, #2e1e0c); }
   .cell.start, .cell.finish {
-    background: radial-gradient(circle at 30% 25%, #fff3b0, #ffd166 60%, #e0a030);
+    background: radial-gradient(circle at 30% 25%, #fff0b5, #e0b04e 55%, #8a5d1a);
   }
   .cell.finish { animation: glow 1.6s ease-in-out infinite alternate; }
   @keyframes glow {
@@ -177,10 +184,12 @@
   }
   .label {
     position: absolute; top: 4px; left: 6px;
-    font-size: .62rem; font-weight: 800;
-    color: rgba(0,0,0,.5);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: .7rem; font-weight: 700;
+    color: #e8c27a;
+    text-shadow: 0 1px 2px #000;
   }
-  .cell.start .label, .cell.finish .label { color: #5a3412; }
+  .cell.start .label, .cell.finish .label { color: #3a2300; text-shadow: none; }
   .tokens {
     position: absolute; inset: 0;
     display: flex; flex-wrap: wrap;
@@ -204,15 +213,29 @@
     width: 58px; height: 58px;
     padding: 5px;
     border-radius: 50%;
-    border: 3px solid #7a4a1a;
-    background: radial-gradient(circle at 35% 30%, #fff8e1, #e8c27a 70%, #c9963f);
-    box-shadow: 0 5px 12px rgba(0,0,0,.45);
+    border: 3px solid #d4a94f;
+    background: radial-gradient(circle at 35% 30%, #5a3a1c, #2a170a 75%);
+    box-shadow: 0 0 0 2px #2a170a, 0 5px 12px rgba(0,0,0,.6);
     transform: translate(-50%, -50%);
     transition: transform .2s;
     cursor: help;
     z-index: 2;
   }
   .medal:hover { transform: translate(-50%, -50%) scale(1.15); }
+  /* Filmdagi kabi yashil shisha shar — taxta markazida tepada */
+  .orb {
+    position: absolute; left: 50%; top: 26px;
+    width: 46px; height: 46px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #e6ffe9, #34d17a 30%, #0d6b3a 70%, #053320);
+    box-shadow: 0 0 0 3px #d4a94f, 0 0 0 5px #2a170a, 0 0 22px 6px rgba(70,255,150,.55);
+    animation: orb 2.4s ease-in-out infinite alternate;
+    z-index: 2;
+  }
+  @keyframes orb {
+    to { box-shadow: 0 0 0 3px #d4a94f, 0 0 0 5px #2a170a, 0 0 34px 10px rgba(70,255,150,.8); }
+  }
   .medal svg { width: 100%; height: 100%; display: block; }
   .legend {
     display: grid;
@@ -540,14 +563,14 @@ const LANDMARKS = [
 /* Har bir medallionning joylashuvi (taxta ramkasi atrofida) */
 const LANDMARK_POS = [
   { left: "25%", top: "26px" },                 // yuqori chap
-  { left: "50%", top: "26px" },                 // yuqori o'rta
   { left: "75%", top: "26px" },                 // yuqori o'ng
   { left: "25%", top: "calc(100% - 26px)" },    // pastki chap
-  { left: "50%", top: "calc(100% - 26px)" },    // pastki o'rta
   { left: "75%", top: "calc(100% - 26px)" },    // pastki o'ng
-  { left: "26px", top: "50%" },                 // chap o'rta
-  { left: "calc(100% - 26px)", top: "50%" },    // o'ng o'rta
-];
+  { left: "26px", top: "35%" },                 // chap yuqori
+  { left: "26px", top: "65%" },                 // chap pastki
+  { left: "calc(100% - 26px)", top: "35%" },    // o'ng yuqori
+  { left: "calc(100% - 26px)", top: "65%" },    // o'ng pastki
+];   // yuqori o'rtada yashil shar (orb) turadi
 
 /* ---------- Holat ---------- */
 let state = null;                 // { teams, current, phase, dice, question, winner }
@@ -586,8 +609,13 @@ function replayAnim(el, cls) {
 function buildLandmarks() {
   const wrap = $("boardWrap");
   const legend = $("legend");
-  wrap.querySelectorAll(".medal").forEach(el => el.remove());
+  wrap.querySelectorAll(".medal, .orb").forEach(el => el.remove());
   legend.innerHTML = "";
+
+  const orb = document.createElement("div");
+  orb.className = "orb";
+  orb.title = "Jumanji ko'zi";
+  wrap.appendChild(orb);
 
   LANDMARKS.forEach((lm, i) => {
     const m = document.createElement("div");
