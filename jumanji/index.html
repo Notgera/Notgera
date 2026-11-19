@@ -721,7 +721,7 @@ function startGame() {
     return;
   }
 
-  state = { teams, current: 0, phase: "roll", dice: 0, question: null, winner: null };
+  state = { id: Math.random(), teams, current: 0, phase: "roll", dice: 0, question: null, winner: null };
   questionBag = [];
   show("game");
   sndInit();
@@ -843,7 +843,6 @@ function render() {
   const asking = p === "question";
   $("okBtn").disabled = !asking;
   $("badBtn").disabled = !asking;
-  $("newBtn").disabled = p === "rolling" || p === "busy";
 
   $("winnerBox").hidden = p !== "over";
   $("timerBox").hidden = p !== "question";
@@ -862,7 +861,9 @@ function rollDice() {
   const diceEl = $("dice");
   diceEl.classList.add("rolling");
   let ticks = 0;
+  const gid = state.id;
   const timer = setInterval(() => {
+    if (!state || state.id !== gid) { clearInterval(timer); return; }
     diceEl.textContent = FACES[Math.floor(Math.random() * 6)];
     ticks++;
     if (ticks >= 12) {
@@ -899,8 +900,12 @@ function askQuestion() {
 }
 
 /* ---------- Javob (to'g'ri / noto'g'ri) ---------- */
+/* Joriy o'yin hali shu bo'lsa true (yangi o'yin boshlanganda eski oqim to'xtaydi) */
+const live = id => !!state && state.id === id;
+
 async function answer(correct, timedOut = false) {
   if (!state || state.phase !== "question") return;
+  const id = state.id;
   stopTimer();
   state.phase = "busy";
   render();
@@ -915,12 +920,14 @@ async function answer(correct, timedOut = false) {
       renderBoard();
       renderScore();
       await sleep(STEP_DELAY);
+      if (!live(id)) return;
     }
     if (team.pos >= FINISH) {
       finishGame(team);
       return;
     }
-    await applySpecial(team);
+    await applySpecial(team, id);
+    if (!live(id)) return;
     if (team.pos >= FINISH) {
       finishGame(team);
       return;
@@ -933,14 +940,16 @@ async function answer(correct, timedOut = false) {
   }
 
   await sleep(1200);
+  if (!live(id)) return;
   nextTurn();
 }
 
 /* Token maxsus katakchaga tushsa, ta'sirini qo'llash */
-async function applySpecial(team) {
+async function applySpecial(team, id) {
   const sp = SPECIALS[team.pos];
   if (!sp) return;
   await sleep(600);
+  if (!live(id)) return;
   if (sp.type === "skip") {
     team.skip = true;
     setMsg(`${sp.icon} ${team.name}: ${sp.text}`, "bad");
@@ -1049,8 +1058,25 @@ function confetti() {
 }
 
 /* ---------- Yangi o'yin ---------- */
+/* Yangi o'yin: ishlayotgan o'yinda tugma ikki marta bosilishini so'raydi (3 soniya ichida).
+   Native confirm() oynasi ba'zi doska brauzerlarida ko'rinmaydi, shuning uchun undan foydalanilmaydi. */
+let resetArmed = false;
+let resetTimer = null;
+
+function disarmReset() {
+  resetArmed = false;
+  clearTimeout(resetTimer);
+  $("newBtn").textContent = "🔄 Yangi o'yin";
+}
+
 function newGame() {
-  if (state && state.phase !== "over" && !confirm("Yangi o'yin boshlansinmi? Joriy natijalar o'chadi.")) return;
+  if (state && state.phase !== "over" && !resetArmed) {
+    resetArmed = true;
+    $("newBtn").textContent = "Yana bosing: yangi o'yin";
+    resetTimer = setTimeout(disarmReset, 3000);
+    return;
+  }
+  disarmReset();
   stopTimer();
   stopMusic();
   state = null;
