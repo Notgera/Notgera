@@ -535,11 +535,51 @@ const QUESTIONS = [
   { q: "Yerning yagona tabiiy yo'ldoshi qaysi?", a: "Oy" },
   { q: "Eng katta okean qaysi?", a: "Tinch okeani" },
   { q: "Bir yilda necha oy bor?", a: "12" },
-  { q: "Normal bosimda suv necha gradusda qaynaydi (Selsiy)?", a: "100 daraja" },
+  { q: "Normal bosimda suv necha gradusda qaynaydi (Selsiy bo'yicha)?", a: "100" },
   { q: "Quyosh sistemasidagi eng katta sayyora qaysi?", a: "Yupiter" },
   { q: "O'zbekistonning pul birligi qaysi?", a: "So'm" },
-  { q: "Hayvonlar shohi deb qaysi hayvon ataladi?", a: "Sher" },
+  { q: "\"Hayvonlar shohi\" deb qaysi hayvon ataladi?", a: "Sher" },
   { q: "Bir haftada necha kun bor?", a: "7" },
+  { q: "Eng katta materik qaysi?", a: "Osiyo" },
+  { q: "Insonning eng katta a'zosi qaysi?", a: "Teri" },
+  { q: "O'simliklar fotosintez uchun qaysi gazni oladi?", a: "Karbonat angidrid" },
+  { q: "Nafas olish uchun kerak bo'lgan gaz qaysi?", a: "Kislorod" },
+  { q: "Bir sutkada necha soat bor?", a: "24" },
+  { q: "Bir soatda necha daqiqa bor?", a: "60" },
+  { q: "Uchburchakning ichki burchaklari yig'indisi necha gradus?", a: "180" },
+  { q: "To'rtburchakning nechta burchagi bor?", a: "4" },
+  { q: "12 × 12 nechiga teng?", a: "144" },
+  { q: "7 × 8 nechiga teng?", a: "56" },
+  { q: "100 sonining 10 foizi nechiga teng?", a: "10" },
+  { q: "Kvadratning tomoni 5 sm bo'lsa, perimetri necha sm?", a: "20" },
+  { q: "Eng kichik tub son qaysi?", a: "2" },
+  { q: "O'zbek lotin alifbosida nechta harf bor?", a: "29" },
+  { q: "Alisher Navoiy asarlarini qaysi tilda yozgan?", a: "Chig'atoy (eski o'zbek) tilida" },
+  { q: "\"Qutadg'u bilig\" asarining muallifi kim?", a: "Yusuf Xos Hojib" },
+  { q: "Amir Temur qaysi shaharda tug'ilgan?", a: "Shahrisabz (Kesh)" },
+  { q: "Mirzo Ulug'bek qaysi fan bilan shug'ullangan?", a: "Astronomiya" },
+  { q: "O'zbekiston mustaqilligi qaysi yili e'lon qilingan?", a: "1991" },
+  { q: "O'zbekistonning birinchi Prezidenti kim bo'lgan?", a: "Islom Karimov" },
+  { q: "Registon majmuasi qaysi shaharda joylashgan?", a: "Samarqand" },
+  { q: "Ichan qal'a qaysi shaharda joylashgan?", a: "Xiva" },
+  { q: "Buxorodagi mashhur baland minora nomi qanday?", a: "Minorai Kalon" },
+  { q: "Amudaryo qaysi tog'lardan boshlanadi?", a: "Pomir" },
+  { q: "Quyoshga eng yaqin sayyora qaysi?", a: "Merkuriy" },
+  { q: "Yerdan keyingi sayyora qaysi?", a: "Mars" },
+  { q: "Eng issiq sayyora qaysi?", a: "Venera" },
+  { q: "Yerga eng yaqin yulduz qaysi?", a: "Quyosh" },
+  { q: "Yorug'lik tezligi taxminan necha km/s?", a: "300 000" },
+  { q: "Kattalar tanasida taxminan nechta suyak bor?", a: "206" },
+  { q: "Yurak nechta kameradan iborat?", a: "4" },
+  { q: "Quyosh nuri ta'sirida terida qaysi vitamin hosil bo'ladi?", a: "D vitamini" },
+  { q: "Suv necha gradusda muzlaydi (Selsiy bo'yicha)?", a: "0" },
+  { q: "Quyosh qaysi tomondan chiqadi?", a: "Sharq" },
+  { q: "Qutb yulduzi qaysi tomonni ko'rsatadi?", a: "Shimol" },
+  { q: "\"O'tkan kunlar\" romani muallifi kim?", a: "Abdulla Qodiriy" },
+  { q: "\"Boburnoma\" muallifi kim?", a: "Zahiriddin Muhammad Bobur" },
+  { q: "Dunyodagi eng baland tog' cho'qqisi qaysi?", a: "Everest" },
+  { q: "Yer Quyosh atrofini bir marta aylanib chiqishi taxminan necha kun?", a: "365" },
+  { q: "Rim raqamida 10 qanday yoziladi?", a: "X" },
 ];
 
 /* ---------- Sozlamalar ---------- */
@@ -722,7 +762,7 @@ function startGame() {
   }
 
   state = { id: Math.random(), teams, current: 0, phase: "roll", dice: 0, question: null, winner: null };
-  questionBag = [];
+  questionBag = shuffle(QUESTIONS.map((_, i) => i));
   show("game");
   sndInit();
   startMusic();
@@ -854,6 +894,7 @@ function render() {
 /* ---------- Zar tashlash ---------- */
 function rollDice() {
   if (!state || state.phase !== "roll") return;
+  if (questionBag.length === 0) { endByQuestions(); return; }
   sfxRoll();
   state.phase = "rolling";
   render();
@@ -878,11 +919,26 @@ function rollDice() {
   }, 70);
 }
 
+/* Savollar tugasa: eng ko'p katak yurgan jamoa g'olib (teng bo'lsa hammasi) */
+function endByQuestions() {
+  const max = Math.max(...state.teams.map(t => t.pos));
+  const leaders = state.teams.filter(t => t.pos === max);
+  state.phase = "over";
+  state.winner = leaders[0];
+  $("winnerText").textContent = leaders.length === 1
+    ? `🏆 ${leaders[0].token} ${leaders[0].name} yutdi!`
+    : `🏆 Teng: ${leaders.map(t => t.name).join(", ")}`;
+  $("qText").textContent = "Savollar tugadi!";
+  $("qHint").textContent = "";
+  stopMusic();
+  sfxWin();
+  setMsg("📚 Barcha savollar tugadi!", "ok");
+  render();
+  confetti();
+}
+
 /* ---------- Savol ---------- */
 function nextQuestion() {
-  if (questionBag.length === 0) {
-    questionBag = shuffle(QUESTIONS.map((_, i) => i));   // hamma savol tugagach qayta aralashtiriladi
-  }
   return QUESTIONS[questionBag.pop()];
 }
 
@@ -1026,7 +1082,7 @@ function nextTurn() {
   const t = state.teams[state.current];
   setMsg(skipped
     ? `🌪 ${skipped} o'tkazib yuborildi. Navbat: ${t.name}`
-    : `Navbat: ${t.name}. Zarni tashlang!`);
+    : `Navbat: ${t.name}. Zarni tashlang! Qolgan savol: ${questionBag.length}`);
 }
 
 function finishGame(team) {
