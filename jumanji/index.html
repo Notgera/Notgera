@@ -14,6 +14,8 @@
     --ink: #1f2a24;
     --ok: #2ecc71;
     --bad: #e74c3c;
+    --inset: 34px;      /* burchak medallionining chetdan masofasi */
+    --medal: 72px;      /* burchak medallionining o'lchami */
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
@@ -184,6 +186,7 @@
   }
   .label {
     position: absolute; top: 4px; left: 6px;
+    white-space: nowrap;
     font-family: Georgia, "Times New Roman", serif;
     font-size: .7rem; font-weight: 700;
     color: #e8c27a;
@@ -203,28 +206,33 @@
   .tok.active { animation: bounce .6s infinite alternate; }
   @keyframes bounce { to { transform: translateY(-5px) scale(1.2); } }
 
-  /* Taxta atrofidagi tarixiy joylar (medallionlar) */
+  /* Taxta burchaklaridagi haqiqiy rasmlar (medallionlar) */
   .board-wrap {
     position: relative;
-    padding: 52px;
+    padding: 62px;
   }
   .medal {
     position: absolute;
-    width: 58px; height: 58px;
-    padding: 5px;
+    width: var(--medal); height: var(--medal);
+    padding: 4px;
     border-radius: 50%;
     border: 3px solid #d4a94f;
     background: radial-gradient(circle at 35% 30%, #5a3a1c, #2a170a 75%);
-    box-shadow: 0 0 0 2px #2a170a, 0 5px 12px rgba(0,0,0,.6);
+    box-shadow: 0 0 0 2px #2a170a, 0 6px 14px rgba(0,0,0,.65);
     transform: translate(-50%, -50%);
     transition: transform .2s;
     cursor: help;
     z-index: 2;
   }
-  .medal:hover { transform: translate(-50%, -50%) scale(1.15); }
+  .medal:hover { transform: translate(-50%, -50%) scale(1.12); }
+  .medal .pic { display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
+  .medal .pic img, .medal .pic svg {
+    width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 50%;
+  }
+  .pic { display: block; width: 100%; height: 100%; }
   /* Filmdagi kabi yashil shisha shar — taxta markazida tepada */
   .orb {
-    position: absolute; left: 50%; top: 26px;
+    position: absolute; left: 50%; top: var(--inset);
     width: 46px; height: 46px;
     transform: translate(-50%, -50%);
     border-radius: 50%;
@@ -236,32 +244,17 @@
   @keyframes orb {
     to { box-shadow: 0 0 0 3px #d4a94f, 0 0 0 5px #2a170a, 0 0 34px 10px rgba(70,255,150,.8); }
   }
-  .medal svg { width: 100%; height: 100%; display: block; }
-  .legend {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 8px;
-    margin-top: 14px;
+  .credit {
+    margin-top: 10px;
+    text-align: center;
+    font-size: .72rem;
+    opacity: .6;
   }
-  .legend-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 10px;
-    border-radius: 12px;
-    background: rgba(0,0,0,.2);
-    font-size: .85rem;
-    font-weight: 600;
-  }
-  .legend-item svg { width: 30px; height: 30px; flex-shrink: 0; }
-  .legend-ico { width: 34px; height: 34px; flex-shrink: 0; display: block; }
-  .legend-ico svg, .legend-ico img, .medal .pic svg, .medal .pic img {
-    width: 100%; height: 100%; display: block; object-fit: cover;
-  }
-  .legend-ico img { border-radius: 8px; }
-  .medal .pic img { border-radius: 50%; }
-  .pic { display: block; width: 100%; height: 100%; }
   @media (max-width: 560px) {
+    :root { --inset: 22px; --medal: 54px; }
     .board-wrap { padding: 44px; }
-    .medal { width: 46px; height: 46px; }
+    .label { font-size: .55rem; top: 2px; left: 3px; }
+    .tokens { padding-top: 12px; }
   }
 
   /* Boshqaruv paneli */
@@ -432,7 +425,7 @@
       <div class="board-wrap" id="boardWrap">
         <div class="board" id="board"></div>
       </div>
-      <div class="legend" id="legend"></div>
+      <div class="credit">Rasmlar: Wikimedia Commons. Muallif va litsenziya har bir fayl sahifasida ko'rsatilgan.</div>
     </div>
 
     <div class="panel">
@@ -511,15 +504,25 @@ const FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 const STEP_DELAY = 350;           // har bir qadam orasidagi kutish (ms)
 const LEAF_ICONS = ["🌿", "🍃", "🌴", "🍂", "🌱"];
 
-/* Taxta atrofidagi tarixiy joylar. Har biri SVG rasm (100x100). */
+/* ---------- Taxta burchaklaridagi 4 ta tarixiy joy ----------
+   name: nomi (sarlavha sifatida)
+   img:  Wikimedia Commons fayl nomi (rasm yuklanmasa, svg chizma qoladi)
+   svg:  zaxira chizma (100x100)                                        */
 const LANDMARKS = [
-  { name: "Registon", svg: `<svg viewBox="0 0 100 100">
+  { name: "Registon", img: "Registan_square_Samarkand.jpg", svg: `<svg viewBox="0 0 100 100">
       <rect x="4" y="78" width="92" height="14" fill="#e8c27a"/>
       <rect x="8" y="46" width="22" height="34" fill="#2aa6a0"/><path d="M8 48 Q19 26 30 48 Z" fill="#1f8a86"/>
       <rect x="70" y="46" width="22" height="34" fill="#2aa6a0"/><path d="M70 48 Q81 26 92 48 Z" fill="#1f8a86"/>
       <rect x="34" y="30" width="32" height="50" fill="#2aa6a0"/><path d="M34 32 Q50 2 66 32 Z" fill="#1f8a86"/>
       <rect x="44" y="60" width="12" height="18" fill="#5a2d0c"/></svg>` },
-  { name: "Ark qal'asi", svg: `<svg viewBox="0 0 100 100">
+  { name: "Amir Temur maqbarasi", img: "Gur-e_Amir_01.jpg", svg: `<svg viewBox="0 0 100 100">
+      <rect x="6" y="86" width="88" height="8" fill="#e8c27a"/>
+      <rect x="24" y="56" width="52" height="30" fill="#e8c27a"/>
+      <path d="M22 58 Q50 6 78 58 Z" fill="#2aa6a0"/>
+      <path d="M50 14 V56" stroke="#1f8a86" stroke-width="2"/>
+      <circle cx="50" cy="10" r="3" fill="#ffd166"/>
+      <path d="M44 86 V72 Q50 64 56 72 V86 Z" fill="#5a2d0c"/></svg>` },
+  { name: "Buxoro Ark qo'rg'oni", img: "Ark_fortress_in_Bukhara.jpg", svg: `<svg viewBox="0 0 100 100">
       <rect x="8" y="42" width="84" height="50" fill="#c9703a"/>
       <rect x="8" y="34" width="8" height="8" fill="#c9703a"/><rect x="20" y="34" width="8" height="8" fill="#c9703a"/>
       <rect x="32" y="34" width="8" height="8" fill="#c9703a"/><rect x="44" y="34" width="8" height="8" fill="#c9703a"/>
@@ -528,84 +531,37 @@ const LANDMARKS = [
       <rect x="2" y="26" width="16" height="66" fill="#b25f2e"/><rect x="0" y="22" width="20" height="6" fill="#8a4a22"/>
       <rect x="82" y="26" width="16" height="66" fill="#b25f2e"/><rect x="80" y="22" width="20" height="6" fill="#8a4a22"/>
       <rect x="42" y="62" width="16" height="30" fill="#5a2d0c"/><circle cx="50" cy="62" r="8" fill="#5a2d0c"/></svg>` },
-  { name: "Minorai Kalon", svg: `<svg viewBox="0 0 100 100">
+  { name: "Minorai Kalon", img: "Kalon_Minaret,_Bukhara_(4933987001).jpg", svg: `<svg viewBox="0 0 100 100">
       <rect x="18" y="84" width="64" height="10" fill="#e8c27a"/>
       <polygon points="40,18 60,18 66,84 34,84" fill="#2aa6a0"/>
       <rect x="36" y="30" width="28" height="4" fill="#f4f1e6"/><rect x="35" y="46" width="30" height="4" fill="#f4f1e6"/>
       <rect x="34" y="62" width="32" height="4" fill="#f4f1e6"/><rect x="34" y="74" width="32" height="4" fill="#f4f1e6"/>
       <rect x="44" y="8" width="12" height="10" fill="#1f8a86"/><path d="M42 8 Q50 0 58 8 Z" fill="#1f8a86"/></svg>` },
-  { name: "Go'ri Amir", svg: `<svg viewBox="0 0 100 100">
-      <rect x="6" y="86" width="88" height="8" fill="#e8c27a"/>
-      <rect x="24" y="56" width="52" height="30" fill="#e8c27a"/>
-      <path d="M22 58 Q50 6 78 58 Z" fill="#2aa6a0"/>
-      <path d="M50 14 V56" stroke="#1f8a86" stroke-width="2"/>
-      <circle cx="50" cy="10" r="3" fill="#ffd166"/>
-      <path d="M44 86 V72 Q50 64 56 72 V86 Z" fill="#5a2d0c"/></svg>` },
-  { name: "Chor Minor", svg: `<svg viewBox="0 0 100 100">
-      <rect x="26" y="52" width="48" height="38" fill="#e8c27a"/>
-      <path d="M30 52 Q50 26 70 52 Z" fill="#2aa6a0"/>
-      <rect x="6" y="40" width="14" height="50" fill="#c9703a"/><path d="M6 42 Q13 26 20 42 Z" fill="#2aa6a0"/>
-      <rect x="80" y="40" width="14" height="50" fill="#c9703a"/><path d="M80 42 Q87 26 94 42 Z" fill="#2aa6a0"/>
-      <rect x="44" y="70" width="12" height="20" fill="#5a2d0c"/>
-      <rect x="4" y="88" width="92" height="6" fill="#e8c27a"/></svg>` },
-  { name: "Ulug'bek rasadxonasi", svg: `<svg viewBox="0 0 100 100">
-      <rect x="4" y="86" width="92" height="8" fill="#e8c27a"/>
-      <path d="M12 84 A38 38 0 0 1 88 84" fill="none" stroke="#c9703a" stroke-width="8"/>
-      <path d="M50 84 L78 30" stroke="#5a2d0c" stroke-width="3"/>
-      <circle cx="78" cy="30" r="4" fill="#ffd166"/></svg>` },
-  { name: "Islom Xo'ja minorasi", svg: `<svg viewBox="0 0 100 100">
-      <rect x="22" y="86" width="56" height="8" fill="#e8c27a"/>
-      <rect x="40" y="26" width="20" height="62" fill="#2aa6a0"/>
-      <rect x="40" y="36" width="20" height="4" fill="#ffd166"/><rect x="40" y="52" width="20" height="4" fill="#ffd166"/>
-      <rect x="40" y="68" width="20" height="4" fill="#ffd166"/><rect x="40" y="80" width="20" height="4" fill="#ffd166"/>
-      <path d="M38 26 L50 4 L62 26 Z" fill="#1f8a86"/></svg>` },
-  { name: "Shohi Zinda", svg: `<svg viewBox="0 0 100 100">
-      <rect x="4" y="66" width="92" height="28" fill="#e8c27a"/>
-      <path d="M8 68 Q20 34 32 68 Z" fill="#2aa6a0"/>
-      <path d="M36 68 Q50 22 64 68 Z" fill="#1f8a86"/>
-      <path d="M68 68 Q80 34 92 68 Z" fill="#2aa6a0"/>
-      <rect x="46" y="80" width="8" height="14" fill="#5a2d0c"/></svg>` },
 ];
 
-/* Har bir medallionning joylashuvi (taxta ramkasi atrofida) */
+/* Burchaklardagi joylashuv: 0 = yuqori chap, 1 = yuqori o'ng, 2 = pastki chap, 3 = pastki o'ng */
 const LANDMARK_POS = [
-  { left: "25%", top: "26px" },                 // yuqori chap
-  { left: "75%", top: "26px" },                 // yuqori o'ng
-  { left: "25%", top: "calc(100% - 26px)" },    // pastki chap
-  { left: "75%", top: "calc(100% - 26px)" },    // pastki o'ng
-  { left: "26px", top: "35%" },                 // chap yuqori
-  { left: "26px", top: "65%" },                 // chap pastki
-  { left: "calc(100% - 26px)", top: "35%" },    // o'ng yuqori
-  { left: "calc(100% - 26px)", top: "65%" },    // o'ng pastki
-];   // yuqori o'rtada yashil shar (orb) turadi
-
-/* Haqiqiy rasmlar (Wikimedia Commons fayl nomlari, LANDMARKS tartibida).
-   Rasm yuklanmasa, yuqoridagi SVG chizma o'rniga qoladi.
-   Har bir rasmning muallifi va litsenziyasi Commons fayl sahifasida ko'rsatilgan. */
-const LANDMARK_IMG = [
-  "Registan_square_Samarkand.jpg",
-  "Ark_fortress_in_Bukhara.jpg",
-  "Kalon_Minaret,_Bukhara_(4933987001).jpg",
-  "Gur-e_Amir_01.jpg",
-  "Chor_minor_from_south.jpg",
-  "Ulugh_Beg_Observatory_02.jpg",
-  "Islom-Hoja_Minaret_(8145421671).jpg",
-  "Gorskii_03978u.jpg",
+  { left: "var(--inset)", top: "var(--inset)" },
+  { left: "calc(100% - var(--inset))", top: "var(--inset)" },
+  { left: "var(--inset)", top: "calc(100% - var(--inset))" },
+  { left: "calc(100% - var(--inset))", top: "calc(100% - var(--inset))" },
 ];
+
+/* Rasm manzili: Wikimedia Commons, kengligi 600px (aniq ko'rinishi uchun) */
 function commonsUrl(file) {
-  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file) + "?width=300";
+  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file) + "?width=600";
 }
 
 /* SVG chizma darhol ko'rinadi, rasm yuklansa u bilan almashtiriladi */
-function picEl(lm, i) {
+function picEl(lm) {
   const span = document.createElement("span");
   span.className = "pic";
   span.innerHTML = lm.svg;
-  if (LANDMARK_IMG[i]) {
+  if (lm.img) {
     const img = new Image();
     img.alt = lm.name;
     img.onload = () => { span.innerHTML = ""; span.appendChild(img); };
-    img.src = commonsUrl(LANDMARK_IMG[i]);
+    img.src = commonsUrl(lm.img);
   }
   return span;
 }
@@ -641,44 +597,6 @@ function replayAnim(el, cls) {
   el.classList.remove(cls);
   void el.offsetWidth;          // animatsiyani qayta boshlash uchun
   el.classList.add(cls);
-}
-
-/* ---------- Taxta atrofidagi medallionlar va ro'yxat ---------- */
-function buildLandmarks() {
-  const wrap = $("boardWrap");
-  const legend = $("legend");
-  wrap.querySelectorAll(".medal, .orb").forEach(el => el.remove());
-  legend.innerHTML = "";
-
-  const orb = document.createElement("div");
-  orb.className = "orb";
-  orb.title = "Jumanji ko'zi";
-  wrap.appendChild(orb);
-
-  LANDMARKS.forEach((lm, i) => {
-    const m = document.createElement("div");
-    m.className = "medal";
-    m.title = lm.name;
-    m.appendChild(picEl(lm, i));
-    m.style.left = LANDMARK_POS[i].left;
-    m.style.top = LANDMARK_POS[i].top;
-    wrap.appendChild(m);
-
-    const item = document.createElement("div");
-    item.className = "legend-item";
-    const ico = document.createElement("span");
-    ico.className = "legend-ico";
-    ico.appendChild(picEl(lm, i));
-    const txt = document.createElement("span");
-    txt.textContent = lm.name;
-    item.append(ico, txt);
-    legend.appendChild(item);
-  });
-
-  const credit = document.createElement("div");
-  credit.textContent = "Rasmlar: Wikimedia Commons. Muallif va litsenziya har bir fayl sahifasida ko'rsatilgan.";
-  credit.style.cssText = "grid-column: 1 / -1; font-size: .75rem; opacity: .7; margin-top: 4px;";
-  legend.appendChild(credit);
 }
 
 /* ---------- Dekor: uchib yuruvchi barglar ---------- */
@@ -772,7 +690,7 @@ function buildBoard() {
 
       const label = document.createElement("span");
       label.className = "label";
-      label.textContent = idx === 0 ? "START" : idx === FINISH ? "🏁 FINISH" : idx;
+      label.textContent = idx === 0 ? "START" : idx === FINISH ? "🏁" : idx;
 
       const tk = document.createElement("div");
       tk.className = "tokens";
@@ -782,6 +700,27 @@ function buildBoard() {
       cellEls[idx] = tk;
     }
   }
+}
+
+/* Taxta burchaklaridagi 4 ta medallion */
+function buildLandmarks() {
+  const wrap = $("boardWrap");
+  wrap.querySelectorAll(".medal, .orb").forEach(el => el.remove());
+
+  const orb = document.createElement("div");
+  orb.className = "orb";
+  orb.title = "Jumanji ko'zi";
+  wrap.appendChild(orb);
+
+  LANDMARKS.forEach((lm, i) => {
+    const m = document.createElement("div");
+    m.className = "medal";
+    m.title = lm.name;
+    m.appendChild(picEl(lm));
+    m.style.left = LANDMARK_POS[i].left;
+    m.style.top = LANDMARK_POS[i].top;
+    wrap.appendChild(m);
+  });
 }
 
 function renderBoard() {
