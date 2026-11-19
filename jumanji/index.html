@@ -391,7 +391,6 @@
 
 <header>
   <h1>JUMANJI</h1>
-  <div class="subtitle">🦁 Jamoaviy dars o'yini 🌴</div>
 </header>
 
 <!-- ============ 1-EKRAN: SOZLASH ============ -->
@@ -444,16 +443,12 @@
 
       <div class="question" id="qCard">
         <p class="qtext" id="qText">Zarni tashlang — savol shu yerda chiqadi.</p>
-        <div class="qanswer" id="qAnswer" hidden></div>
         <div class="qhint" id="qHint"></div>
       </div>
 
       <div class="btns">
         <button class="btn-ok" id="okBtn" disabled>✅ To'g'ri</button>
         <button class="btn-bad" id="badBtn" disabled>❌ Noto'g'ri</button>
-      </div>
-      <div class="btns single">
-        <button class="btn-ghost" id="revealBtn" disabled>👁 Javobni ko'rsatish</button>
       </div>
 
       <div id="msg"></div>
@@ -774,7 +769,6 @@ function render() {
   const asking = p === "question";
   $("okBtn").disabled = !asking;
   $("badBtn").disabled = !asking;
-  $("revealBtn").disabled = !asking;
   $("newBtn").disabled = p === "rolling" || p === "busy";
 
   $("winnerBox").hidden = p !== "over";
@@ -820,8 +814,6 @@ function askQuestion() {
   state.question = nextQuestion();
 
   $("qText").textContent = state.question.q;
-  $("qAnswer").textContent = "Javob: " + state.question.a;
-  $("qAnswer").hidden = true;
   $("qHint").textContent = `To'g'ri javob bo'lsa token ${state.dice} qadam yuradi.`;
   replayAnim($("qCard"), "anim");
 
@@ -866,7 +858,6 @@ function nextTurn() {
   $("dice").textContent = "🎲";
   $("diceNum").textContent = "–";
   $("qText").textContent = "Zarni tashlang — savol shu yerda chiqadi.";
-  $("qAnswer").hidden = true;
   $("qHint").textContent = "";
 
   render();
@@ -879,7 +870,6 @@ function finishGame(team) {
   state.winner = team;
   $("winnerText").textContent = `🏆 ${team.token} ${team.name} yutdi!`;
   $("qText").textContent = "O'yin tugadi!";
-  $("qAnswer").hidden = true;
   $("qHint").textContent = "";
   setMsg("🎉 Tabriklaymiz!", "ok");
   render();
@@ -910,7 +900,6 @@ function newGame() {
   $("dice").textContent = "🎲";
   $("diceNum").textContent = "–";
   $("qText").textContent = "Zarni tashlang — savol shu yerda chiqadi.";
-  $("qAnswer").hidden = true;
   $("qHint").textContent = "";
   $("winnerBox").hidden = true;
   setMsg("");
@@ -924,10 +913,6 @@ $("startBtn").addEventListener("click", startGame);
 $("rollBtn").addEventListener("click", rollDice);
 $("okBtn").addEventListener("click", () => answer(true));
 $("badBtn").addEventListener("click", () => answer(false));
-$("revealBtn").addEventListener("click", () => {
-  const el = $("qAnswer");
-  el.hidden = !el.hidden;
-});
 $("newBtn").addEventListener("click", newGame);
 
 if (QUESTIONS.length === 0) {
