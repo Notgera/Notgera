@@ -154,15 +154,14 @@
   .board {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-    padding: 14px;
+    gap: 12px;
+    padding: 22px;
     background:
       radial-gradient(circle at 10px 10px, #f3d58a 0 6px, #8a6420 7px 8px, transparent 9px),
       radial-gradient(circle at calc(100% - 10px) 10px, #f3d58a 0 6px, #8a6420 7px 8px, transparent 9px),
       radial-gradient(circle at 10px calc(100% - 10px), #f3d58a 0 6px, #8a6420 7px 8px, transparent 9px),
       radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #f3d58a 0 6px, #8a6420 7px 8px, transparent 9px),
       repeating-linear-gradient(92deg, rgba(0,0,0,.10) 0 2px, transparent 2px 11px),
-      repeating-linear-gradient(88deg, rgba(255,220,150,.04) 0 1px, transparent 1px 23px),
       linear-gradient(145deg, #6b4220, #2e1a0b);
     border: 3px solid #b8903f;
     border-radius: 18px;
@@ -171,7 +170,7 @@
   .cell {
     position: relative;
     aspect-ratio: 1 / 1;
-    border-radius: 14px;
+    border-radius: 12px;
     background: radial-gradient(circle at 30% 25%, #4f7a3e, #2c4a24 70%, #1a2e16);
     box-shadow: inset 0 0 0 1px rgba(232,194,122,.55), inset 0 0 0 3px rgba(0,0,0,.25), inset 0 -5px 0 rgba(0,0,0,.35), 0 4px 8px rgba(0,0,0,.55);
     overflow: hidden;
@@ -264,7 +263,7 @@
     background: rgba(255,255,255,.06);
     border: 1px solid rgba(255,255,255,.12);
     backdrop-filter: blur(8px);
-    display: flex; flex-direction: column; gap: 14px;
+    display: flex; flex-direction: column; gap: 18px;
   }
   .turn {
     text-align: center;
@@ -660,7 +659,7 @@ function replayAnim(el, cls) {
 /* ---------- Dekor: uchib yuruvchi barglar ---------- */
 function makeLeaves() {
   const box = $("leaves");
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 6; i++) {
     const s = document.createElement("span");
     s.className = "leaf";
     s.textContent = LEAF_ICONS[i % LEAF_ICONS.length];
