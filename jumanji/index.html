@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jumanji — Jamoaviy dars o'yini</title>
+<style>
+  :root {
+    --bg1: #1b3d2f;
+    --bg2: #0b1a13;
+    --gold: #f4c542;
+    --card: #fffaf0;
+    --ink: #2a2a2a;
+    --ok: #2e9e5b;
+    --bad: #c94a3a;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at top, var(--bg1), var(--bg2));
+    color: #fff;
+    min-height: 100vh;
+  }
+  header { text-align: center; padding: 18px 12px 6px; }
+  h1 { margin: 0; font-size: 2.2rem; color: var(--gold); letter-spacing: 3px; }
+  .subtitle { opacity: .8; margin-top: 4px; }
+  .screen { display: none; max-width: 1100px; margin: 0 auto; padding: 16px; }
+  .screen.active { display: block; }
+
+  /* ---------- Sozlash ekrani ---------- */
+  .card {
+    background: rgba(255,255,255,.07);
+    border-radius: 16px;
+    padding: 20px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .card label { display: block; margin-bottom: 6px; font-weight: 600; }
+  select, input[type="text"] {
+    font: inherit;
+    padding: 10px;
+    border-radius: 8px;
+    border: 0;
+    background: #fff;
+    color: var(--ink);
+  }
+  .team-row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+  .team-row .num-badge {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--gold); color: #222; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .team-row input[type="text"] { flex: 1; min-width: 0; }
+  .team-row select { font-size: 1.4rem; padding: 6px; }
+  .setup-msg { color: #ffb4a8; min-height: 1.4em; margin-top: 10px; }
+
+  /* ---------- Tugmalar ---------- */
+  button {
+    font: inherit;
+    font-weight: 600;
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 18px;
+    cursor: pointer;
+    color: #fff;
+    background: #46634f;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.1); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-gold { background: var(--gold); color: #222; }
+  .btn-ok { background: var(--ok); }
+  .btn-bad { background: var(--bad); }
+  .btn-ghost { background: rgba(255,255,255,.12); }
+
+  /* ---------- O'yin ekrani ---------- */
+  .game-grid {
+    display: grid;
+    grid-template-columns: minmax(300px, 1.2fr) minmax(280px, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 760px) { .game-grid { grid-template-columns: 1fr; } }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 10px;
+    background: #3b2a14;
+    border: 4px solid #c08a3e;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  }
+  .cell {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    background: #5e8a35;
+    border: 2px solid rgba(0,0,0,.25);
+    overflow: hidden;
+  }
+  .cell.alt { background: #7aa447; }
+  .cell.start, .cell.finish { background: var(--gold); color: #222; }
+  .cell .label {
+    position: absolute; top: 3px; left: 5px;
+    font-size: .65rem; font-weight: 700; opacity: .85;
+  }
+  .cell.start .label, .cell.finish .label { opacity: 1; }
+  .tokens {
+    position: absolute; inset: 0;
+    display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: center;
+    padding-top: 10px;
+    font-size: clamp(1rem, 3vw, 1.7rem);
+  }
+  .tok { transition: transform .2s; }
+  .tok.active { animation: bounce .6s infinite alternate; }
+  @keyframes bounce { to { transform: translateY(-4px) scale(1.2); } }
+
+  .panel {
+    background: rgba(255,255,255,.07);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .turn { text-align: center; }
+  .turn .small { opacity: .75; font-size: .9rem; }
+  .turn .team { font-size: 1.6rem; font-weight: 800; color: var(--gold); margin-top: 4px; }
+  .dice-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .dice { font-size: 3.5rem; line-height: 1; }
+  .dice-num { font-size: 1rem; opacity: .9; }
+  .dice-num b { font-size: 1.6rem; color: var(--gold); }
+
+  .question {
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 16px;
+    min-height: 120px;
+  }
+  .qtext { font-size: 1.25rem; font-weight: 600; margin: 0; line-height: 1.4; }
+  .qanswer {
+    margin-top: 10px; padding: 8px 10px;
+    background: #e8f5e9; color: #1b5e20; border-radius: 8px;
+  }
+  .qhint { margin-top: 8px; font-size: .85rem; color: #666; }
+
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btns button { flex: 1; min-width: 110px; }
+
+  #msg {
+    min-height: 1.5em;
+    text-align: center;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .winner {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--gold);
+    background: rgba(244,197,66,.12);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  h2 { margin: 0 0 4px; font-size: 1.1rem; color: var(--gold); }
+  ul.score { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  ul.score li {
+    background: rgba(0,0,0,.2);
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+  }
+  ul.score li.current { border-color: var(--gold); }
+  .sc-head { font-weight: 700; }
+  .bar {
+    height: 10px; margin: 6px 0 2px;
+    background: rgba(255,255,255,.15);
+    border-radius: 6px; overflow: hidden;
+  }
+  .fill { height: 100%; background: var(--gold); transition: width .3s; }
+  ul.score small { opacity: .8; }
+  .footer-btns { display: flex; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌿 JUMANJI 🦁</h1>
+  <div class="subtitle">Jamoaviy dars o'yini</div>
+</header>
+
+<!-- ============ 1-EKRAN: SOZLASH ============ -->
+<section id="setup" class="screen active">
+  <div class="card">
+    <h2 style="font-size:1.4rem">Jamoa sozlamalari</h2>
+
+    <label for="teamCount">Jamoalar soni</label>
+    <select id="teamCount">
+      <option value="2">2 ta jamoa</option>
+      <option value="3">3 ta jamoa</option>
+      <option value="4" selected>4 ta jamoa</option>
+      <option value="5">5 ta jamoa</option>
+      <option value="6">6 ta jamoa</option>
+    </select>
+
+    <div id="teamRows"></div>
+
+    <div class="setup-msg" id="setupMsg"></div>
+    <div style="text-align:center; margin-top:10px;">
+      <button class="btn-gold" id="startBtn">▶ O'yinni boshlash</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2-EKRAN: O'YIN ============ -->
+<section id="game" class="screen">
+  <div class="game-grid">
+
+    <!-- Chap: o'yin taxtasi -->
+    <div>
+      <div class="board" id="board"></div>
+    </div>
+
+    <!-- O'ng: boshqaruv paneli -->
+    <div class="panel">
+      <div class="turn">
+        <div class="small">Navbat:</div>
+        <div class="team" id="turnTeam">—</div>
+      </div>
+
+      <div class="dice-row">
+        <div class="dice" id="dice">🎲</div>
+        <div class="dice-num" id="diceNum">Tushgan son: <b>–</b></div>
+      </div>
+
+      <div class="btns">
+        <button class="btn-gold" id="rollBtn">🎲 Zarni tashlash</button>
+      </div>
+
+      <div class="question">
+        <p class="qtext" id="qText">Zarni tashlang — savol shu yerda chiqadi.</p>
+        <div class="qanswer" id="qAnswer" hidden></div>
+        <div class="qhint" id="qHint"></div>
+      </div>
+
+      <div class="btns">
+        <button class="btn-ok" id="okBtn" disabled>✅ To'g'ri</button>
+        <button class="btn-bad" id="badBtn" disabled>❌ Noto'g'ri</button>
+      </div>
+      <div class="btns">
+        <button class="btn-ghost" id="revealBtn" disabled>👁 Javobni ko'rsatish</button>
+      </div>
+
+      <div id="msg"></div>
+
+      <div class="winner" id="winnerBox" hidden>
+        <div id="winnerText"></div>
+      </div>
+
+      <div>
+        <h2>Natijalar</h2>
+        <ul class="score" id="scoreList"></ul>
+      </div>
+
+      <div class="footer-btns">
+        <button class="btn-ghost" id="newBtn">🔄 Yangi o'yin</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+/* =====================================================================
+   SAVOLLAR — shu yerni o'zgartiring.
+   Hozirgi savollar namuna. O'z mavzuingizdagi savollar bilan almashtiring.
+   Format: { q: "savol matni", a: "to'g'ri javob" }
+   ===================================================================== */
+const QUESTIONS = [
+  { q: "O'zbekistonning poytaxti qaysi shahar?", a: "Toshkent" },
+  { q: "Suvning kimyoviy formulasi qanday?", a: "H₂O" },
+  { q: "Yerning yagona tabiiy yo'ldoshi qaysi?", a: "Oy" },
+  { q: "Eng katta okean qaysi?", a: "Tinch okeani" },
+  { q: "Bir yilda necha oy bor?", a: "12" },
+  { q: "Normal bosimda suv necha gradusda qaynaydi (Selsiy)?", a: "100 daraja" },
+  { q: "Quyosh sistemasidagi eng katta sayyora qaysi?", a: "Yupiter" },
+  { q: "O'zbekistonning pul birligi qaysi?", a: "So'm" },
+  { q: "Hayvonlar shohi deb qaysi hayvon ataladi?", a: "Sher" },
+  { q: "Bir haftada necha kun bor?", a: "7" },
+];
+
+/* ---------- Sozlamalar ---------- */
+const TOKENS = ["🦁", "🐒", "🐍", "🦜", "🐘", "🦒"];
+const COLS = 6;
+const CELLS = 36;                 // taxtadagi katakchalar soni (6 x 6)
+const FINISH = CELLS - 1;         // finish katakcha indeksi
+const FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+const STEP_DELAY = 350;           // har bir qadam orasidagi kutish (ms)
+
+/* ---------- Holat ---------- */
+let state = null;                 // { teams, current, phase, dice, question, winner }
+let questionBag = [];
+let cellEls = [];
+
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function show(screenId) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === screenId));
+}
+
+function setMsg(text) { $("msg").textContent = text; }
+
+/* ---------- Sozlash ekrani ---------- */
+function renderSetup() {
+  const n = +$("teamCount").value;
+  const box = $("teamRows");
+  box.innerHTML = "";
+  for (let i = 0; i < n; i++) {
+    const row = document.createElement("div");
+    row.className = "team-row";
+
+    const badge = document.createElement("span");
+    badge.className = "num-badge";
+    badge.textContent = i + 1;
+
+    const name = document.createElement("input");
+    name.type = "text";
+    name.maxLength = 20;
+    name.placeholder = `Jamoa ${i + 1} nomi`;
+    name.value = `Jamoa ${i + 1}`;
+    name.dataset.name = "1";
+
+    const tok = document.createElement("select");
+    tok.dataset.token = "1";
+    TOKENS.forEach((t, k) => {
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      if (k === i) opt.selected = true;   // har bir jamoaga boshqa token
+      tok.appendChild(opt);
+    });
+
+    row.append(badge, name, tok);
+    box.appendChild(row);
+  }
+  $("setupMsg").textContent = "";
+}
+
+function startGame() {
+  const rows = [...document.querySelectorAll(".team-row")];
+  const teams = rows.map((r, i) => ({
+    name: r.querySelector("[data-name]").value.trim() || `Jamoa ${i + 1}`,
+    token: r.querySelector("[data-token]").value,
+    pos: 0,
+  }));
+
+  const tokens = teams.map(t => t.token);
+  if (new Set(tokens).size !== tokens.length) {
+    $("setupMsg").textContent = "Har bir jamoa uchun boshqa token tanlang.";
+    return;
+  }
+
+  state = { teams, current: 0, phase: "roll", dice: 0, question: null, winner: null };
+  questionBag = [];
+  show("game");
+  render();
+  setMsg(`Navbat: ${teams[0].name}. Zarni tashlang!`);
+}
+
+/* ---------- O'yin taxtasi ---------- */
+function buildBoard() {
+  const board = $("board");
+  board.innerHTML = "";
+  cellEls = [];
+  const rows = CELLS / COLS;
+
+  // Ekranda yuqoridan pastga. Qatorlar ilon yo'li kabi navbatma-navbat yo'naladi.
+  for (let d = 0; d < rows; d++) {
+    const logicalRow = rows - 1 - d;          // 0 = eng pastki qator
+    for (let c = 0; c < COLS; c++) {
+      const logicalCol = logicalRow % 2 === 0 ? c : COLS - 1 - c;
+      const idx = logicalRow * COLS + logicalCol;
+
+      const cell = document.createElement("div");
+      cell.className = "cell " + (idx === 0 ? "start" : idx === FINISH ? "finish" : (idx % 2 ? "alt" : ""));
+
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = idx === 0 ? "START" : idx === FINISH ? "🏁 FINISH" : idx;
+
+      const tk = document.createElement("div");
+      tk.className = "tokens";
+
+      cell.append(label, tk);
+      board.appendChild(cell);
+      cellEls[idx] = tk;
+    }
+  }
+}
+
+function renderBoard() {
+  cellEls.forEach(el => { el.textContent = ""; });
+  const isOver = state.phase === "over";
+  state.teams.forEach((t, i) => {
+    const span = document.createElement("span");
+    span.className = "tok" + (i === state.current && !isOver ? " active" : "");
+    span.textContent = t.token;
+    span.title = t.name;
+    cellEls[t.pos].appendChild(span);
+  });
+}
+
+/* ---------- Natijalar paneli ---------- */
+function renderScore() {
+  const list = $("scoreList");
+  list.innerHTML = "";
+  const isOver = state.phase === "over";
+  state.teams.forEach((t, i) => {
+    const li = document.createElement("li");
+    if (i === state.current && !isOver) li.className = "current";
+
+    const head = document.createElement("div");
+    head.className = "sc-head";
+    head.textContent = `${t.token} ${t.name}`;
+
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    const fill = document.createElement("div");
+    fill.className = "fill";
+    fill.style.width = Math.round((t.pos / FINISH) * 100) + "%";
+    bar.appendChild(fill);
+
+    const info = document.createElement("small");
+    info.textContent = `${t.pos} / ${FINISH} katak`;
+
+    li.append(head, bar, info);
+    list.appendChild(li);
+  });
+}
+
+/* ---------- Asosiy render ---------- */
+function render() {
+  if (!state) return;
+  const t = state.teams[state.current];
+  const p = state.phase;
+
+  $("turnTeam").textContent = `${t.token} ${t.name}`;
+
+  $("rollBtn").disabled = p !== "roll";
+  const asking = p === "question";
+  $("okBtn").disabled = !asking;
+  $("badBtn").disabled = !asking;
+  $("revealBtn").disabled = !asking;
+  $("newBtn").disabled = p === "rolling" || p === "busy";
+
+  $("winnerBox").hidden = p !== "over";
+
+  renderBoard();
+  renderScore();
+}
+
+/* ---------- Zar tashlash ---------- */
+function rollDice() {
+  if (!state || state.phase !== "roll") return;
+  state.phase = "rolling";
+  render();
+
+  const diceEl = $("dice");
+  let ticks = 0;
+  const timer = setInterval(() => {
+    diceEl.textContent = FACES[Math.floor(Math.random() * 6)];
+    ticks++;
+    if (ticks >= 12) {
+      clearInterval(timer);
+      const n = 1 + Math.floor(Math.random() * 6);   // 1 dan 6 gacha
+      state.dice = n;
+      diceEl.textContent = FACES[n - 1];
+      $("diceNum").innerHTML = `Tushgan son: <b>${n}</b>`;
+      askQuestion();
+    }
+  }, 70);
+}
+
+/* ---------- Savol ---------- */
+function nextQuestion() {
+  if (questionBag.length === 0) {
+    questionBag = shuffle(QUESTIONS.map((_, i) => i));   // hamma savol tugagach qayta aralashtiriladi
+  }
+  return QUESTIONS[questionBag.pop()];
+}
+
+function askQuestion() {
+  state.phase = "question";
+  state.question = nextQuestion();
+
+  $("qText").textContent = state.question.q;
+  $("qAnswer").textContent = "Javob: " + state.question.a;
+  $("qAnswer").hidden = true;
+  $("qHint").textContent = `To'g'ri javob bo'lsa token ${state.dice} qadam yuradi.`;
+
+  render();
+  setMsg(`${state.teams[state.current].name} javob bermoqda...`);
+}
+
+/* ---------- Javob (to'g'ri / noto'g'ri) ---------- */
+async function answer(correct) {
+  if (!state || state.phase !== "question") return;
+  state.phase = "busy";
+  render();
+
+  const team = state.teams[state.current];
+
+  if (correct) {
+    setMsg(`✅ To'g'ri! ${team.name} ${state.dice} qadam yuradi.`);
+    for (let i = 0; i < state.dice && team.pos < FINISH; i++) {
+      team.pos++;
+      renderBoard();
+      renderScore();
+      await sleep(STEP_DELAY);
+    }
+    if (team.pos >= FINISH) {
+      finishGame(team);
+      return;
+    }
+  } else {
+    setMsg(`❌ Noto'g'ri. ${team.name} joyida qoladi.`);
+  }
+
+  await sleep(1200);
+  nextTurn();
+}
+
+function nextTurn() {
+  state.current = (state.current + 1) % state.teams.length;
+  state.phase = "roll";
+  state.dice = 0;
+  state.question = null;
+
+  $("dice").textContent = "🎲";
+  $("diceNum").innerHTML = "Tushgan son: <b>–</b>";
+  $("qText").textContent = "Zarni tashlang — savol shu yerda chiqadi.";
+  $("qAnswer").hidden = true;
+  $("qHint").textContent = "";
+
+  render();
+  const t = state.teams[state.current];
+  setMsg(`Navbat: ${t.name}. Zarni tashlang!`);
+}
+
+function finishGame(team) {
+  state.phase = "over";
+  state.winner = team;
+  $("winnerText").textContent = `🏆 ${team.token} ${team.name} yutdi!`;
+  $("qText").textContent = "O'yin tugadi!";
+  $("qAnswer").hidden = true;
+  $("qHint").textContent = "";
+  setMsg("🎉 Tabriklaymiz!");
+  render();
+}
+
+/* ---------- Yangi o'yin ---------- */
+function newGame() {
+  if (state && state.phase !== "over" && !confirm("Yangi o'yin boshlansinmi? Joriy natijalar o'chadi.")) return;
+  state = null;
+  questionBag = [];
+  cellEls.forEach(el => { el.textContent = ""; });
+  $("dice").textContent = "🎲";
+  $("diceNum").innerHTML = "Tushgan son: <b>–</b>";
+  $("qText").textContent = "Zarni tashlang — savol shu yerda chiqadi.";
+  $("qAnswer").hidden = true;
+  $("qHint").textContent = "";
+  $("winnerBox").hidden = true;
+  setMsg("");
+  renderSetup();
+  show("setup");
+}
+
+/* ---------- Ishga tushirish ---------- */
+$("teamCount").addEventListener("change", renderSetup);
+$("startBtn").addEventListener("click", startGame);
+$("rollBtn").addEventListener("click", rollDice);
+$("okBtn").addEventListener("click", () => answer(true));
+$("badBtn").addEventListener("click", () => answer(false));
+$("revealBtn").addEventListener("click", () => {
+  const el = $("qAnswer");
+  el.hidden = !el.hidden;
+});
+$("newBtn").addEventListener("click", newGame);
+
+if (QUESTIONS.length === 0) {
+  $("setupMsg").textContent = "Diqqat: savollar ro'yxati bo'sh.";
+}
+buildBoard();
+renderSetup();
+</script>
+</body>
+</html>
