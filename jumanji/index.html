@@ -408,7 +408,8 @@
     background: radial-gradient(circle at 30% 25%, #4a4a4a, #161616 60%, #000);
     box-shadow: inset 0 0 0 1px rgba(232,194,122,.35), inset 0 -5px 0 rgba(0,0,0,.6), 0 4px 8px rgba(0,0,0,.55);
   }
-  .big-toggle { position: fixed; top: 12px; right: 12px; z-index: 20; padding: 8px 12px; font-size: .85rem; }
+  .corner-btns { position: fixed; top: 12px; right: 12px; z-index: 20; display: flex; gap: 8px; }
+  .corner-btns button { padding: 8px 12px; font-size: .85rem; }
 
   body.big .qtext { font-size: 1.9rem; }
   body.big .turn .team { font-size: 2.4rem; }
@@ -432,7 +433,10 @@
 <body>
 
 <div id="leaves"></div>
-<button class="btn-ghost big-toggle" id="bigBtn">🔍 Katta shrift</button>
+<div class="corner-btns">
+  <button class="btn-ghost" id="soundBtn">🔊 Ovoz</button>
+  <button class="btn-ghost" id="bigBtn">🔍 Katta shrift</button>
+</div>
 
 <header>
   <h1>JUMANJI</h1>
@@ -721,6 +725,8 @@ function startGame() {
   state = { teams, current: 0, phase: "roll", dice: 0, question: null, winner: null };
   questionBag = [];
   show("game");
+  sndInit();
+  startMusic();
   render();
   setMsg(`Navbat: ${teams[0].name}. Zarni tashlang!`);
 }
@@ -850,6 +856,7 @@ function render() {
 /* ---------- Zar tashlash ---------- */
 function rollDice() {
   if (!state || state.phase !== "roll") return;
+  sfxRoll();
   state.phase = "rolling";
   render();
 
@@ -902,6 +909,7 @@ async function answer(correct, timedOut = false) {
   const team = state.teams[state.current];
 
   if (correct) {
+    sfxCorrect();
     setMsg(`✅ To'g'ri! ${team.name} ${state.dice} qadam yuradi.`, "ok");
     for (let i = 0; i < state.dice && team.pos < FINISH; i++) {
       team.pos++;
@@ -919,6 +927,7 @@ async function answer(correct, timedOut = false) {
       return;
     }
   } else {
+    sfxWrong();
     setMsg(timedOut
       ? `⏰ Vaqt tugadi! ${team.name} joyida qoladi.`
       : `❌ Noto'g'ri. ${team.name} joyida qoladi.`, "bad");
@@ -1018,6 +1027,8 @@ function finishGame(team) {
   $("winnerText").textContent = `🏆 ${team.token} ${team.name} yutdi!`;
   $("qText").textContent = "O'yin tugadi!";
   $("qHint").textContent = "";
+  stopMusic();
+  sfxWin();
   setMsg("🎉 Tabriklaymiz!", "ok");
   render();
   confetti();
@@ -1042,6 +1053,7 @@ function confetti() {
 function newGame() {
   if (state && state.phase !== "over" && !confirm("Yangi o'yin boshlansinmi? Joriy natijalar o'chadi.")) return;
   stopTimer();
+  stopMusic();
   state = null;
   questionBag = [];
   cellEls.forEach(el => { el.textContent = ""; });
@@ -1055,6 +1067,150 @@ function newGame() {
   show("setup");
 }
 
+/* ---------- Ovoz: nog'ora barabanlari va effektlar (fayl kerak emas) ---------- */
+const SND = { ctx: null, master: null, noise: null, on: true, timer: null, step: 0, next: 0, bpm: 100 };
+const KICK_STEPS = [0, 3, 8, 11];   // 16 qadamli takt
+
+function sndInit() {
+  if (SND.ctx) return true;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return false;
+  SND.ctx = new AC();
+  SND.master = SND.ctx.createGain();
+  SND.master.gain.value = 0.7;
+  SND.master.connect(SND.ctx.destination);
+  const len = SND.ctx.sampleRate;               // 1 soniyalik shovqin
+  SND.noise = SND.ctx.createBuffer(1, len, SND.ctx.sampleRate);
+  const d = SND.noise.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return true;
+}
+
+function noiseSrc(t, dur) {
+  const src = SND.ctx.createBufferSource();
+  src.buffer = SND.noise;
+  src.start(t, Math.random() * 0.5, dur);
+  return src;
+}
+
+function kick(t, vol = 0.8) {
+  const c = SND.ctx, o = c.createOscillator(), g = c.createGain();
+  o.frequency.setValueAtTime(130, t);
+  o.frequency.exponentialRampToValueAtTime(45, t + 0.3);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+  o.connect(g); g.connect(SND.master);
+  o.start(t); o.stop(t + 0.45);
+}
+
+/* Nog'ora zarbi: tovush + tirnoq shovqini */
+function drum(t, f, vol = 0.5) {
+  const c = SND.ctx, o = c.createOscillator(), g = c.createGain();
+  o.frequency.setValueAtTime(f * 1.4, t);
+  o.frequency.exponentialRampToValueAtTime(f, t + 0.08);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+  o.connect(g); g.connect(SND.master);
+  o.start(t); o.stop(t + 0.4);
+
+  const n = noiseSrc(t, 0.05), bp = c.createBiquadFilter(), g2 = c.createGain();
+  bp.type = "bandpass"; bp.frequency.value = 2200;
+  g2.gain.setValueAtTime(vol * 0.5, t);
+  g2.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  n.connect(bp); bp.connect(g2); g2.connect(SND.master);
+}
+
+function shaker(t, vol = 0.12) {
+  const c = SND.ctx, n = noiseSrc(t, 0.06), hp = c.createBiquadFilter(), g = c.createGain();
+  hp.type = "highpass"; hp.frequency.value = 7000;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  n.connect(hp); hp.connect(g); g.connect(SND.master);
+}
+
+function playStep(s, t) {
+  if (KICK_STEPS.includes(s)) kick(t, s === 0 ? 0.9 : 0.6);
+  if (s === 4 || s === 12) drum(t, 150, 0.45);   // baland nog'ora
+  if (s === 6 || s === 14) drum(t, 110, 0.35);   // past zarb
+  shaker(t, s % 2 === 0 ? 0.13 : 0.06);
+}
+
+function scheduler() {
+  const c = SND.ctx;
+  const stepDur = 60 / SND.bpm / 4;
+  while (SND.next < c.currentTime + 0.15) {
+    playStep(SND.step, SND.next);
+    SND.next += stepDur;
+    SND.step = (SND.step + 1) % 16;
+  }
+}
+
+function startMusic() {
+  if (!SND.on || !sndInit()) return;
+  if (SND.ctx.state === "suspended") SND.ctx.resume();
+  if (SND.timer) return;
+  SND.step = 0;
+  SND.next = SND.ctx.currentTime + 0.05;
+  SND.timer = setInterval(scheduler, 25);
+}
+
+function stopMusic() {
+  if (SND.timer) { clearInterval(SND.timer); SND.timer = null; }
+}
+
+/* Qisqa effektlar */
+function tone(f, t, dur, type = "sine", vol = 0.25, slideTo = null) {
+  const c = SND.ctx, o = c.createOscillator(), g = c.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(f, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g); g.connect(SND.master);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+
+function sfxReady() { return SND.on && SND.ctx; }
+
+function sfxRoll() {
+  if (!sfxReady()) return;
+  const t = SND.ctx.currentTime;
+  for (let i = 0; i < 8; i++) shaker(t + i * 0.07, 0.18);
+}
+
+function sfxCorrect() {
+  if (!sfxReady()) return;
+  const t = SND.ctx.currentTime;
+  tone(660, t, 0.15);
+  tone(990, t + 0.12, 0.25);
+}
+
+function sfxWrong() {
+  if (!sfxReady()) return;
+  tone(180, SND.ctx.currentTime, 0.35, "sawtooth", 0.15, 110);
+}
+
+function sfxWin() {
+  if (!sfxReady()) return;
+  const t = SND.ctx.currentTime;
+  [523, 659, 784, 1047].forEach((f, i) => tone(f, t + i * 0.14, 0.4, "triangle", 0.3));
+}
+
+function applySoundUI() {
+  $("soundBtn").textContent = SND.on ? "🔊 Ovoz" : "🔇 Ovoz o'chiq";
+}
+
+function toggleSound() {
+  SND.on = !SND.on;
+  if (SND.on) {
+    if (state && state.phase !== "over") { sndInit(); startMusic(); }
+  } else {
+    stopMusic();
+  }
+  applySoundUI();
+  try { localStorage.setItem("jumanjiSound", SND.on ? "1" : "0"); } catch (e) { /* ignore */ }
+}
+
 /* ---------- Ishga tushirish ---------- */
 $("teamCount").addEventListener("change", renderSetup);
 $("startBtn").addEventListener("click", startGame);
@@ -1063,6 +1219,9 @@ $("okBtn").addEventListener("click", () => answer(true));
 $("badBtn").addEventListener("click", () => answer(false));
 $("newBtn").addEventListener("click", newGame);
 $("bigBtn").addEventListener("click", toggleBig);
+$("soundBtn").addEventListener("click", toggleSound);
+try { SND.on = localStorage.getItem("jumanjiSound") !== "0"; } catch (e) { SND.on = true; }
+applySoundUI();
 try {
   if (localStorage.getItem("jumanjiBig") === "1") document.body.classList.add("big");
 } catch (e) { /* ignore */ }
