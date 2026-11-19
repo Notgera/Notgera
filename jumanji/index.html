@@ -115,6 +115,9 @@
   }
   .team-row input[type="text"] { flex: 1; min-width: 0; }
   .team-row select { font-size: 1.5rem; padding: 4px 8px; }
+  .music-pick { margin-top: 16px; padding: 12px; border-radius: 14px; background: rgba(0,0,0,.18); }
+  .music-pick input[type="file"] { margin-top: 6px; font-size: .85rem; color: #f4f4ef; max-width: 100%; }
+  .music-name { margin-top: 6px; font-size: .8rem; opacity: .7; }
   .setup-msg { color: #ffb3a8; min-height: 1.4em; margin-top: 12px; text-align: center; font-weight: 600; }
 
   /* ---------- Tugmalar ---------- */
@@ -457,6 +460,12 @@
     </select>
 
     <div id="teamRows"></div>
+
+    <div class="music-pick">
+      <label for="musicFile">🎵 Fon musiqasi (ixtiyoriy)</label>
+      <input type="file" id="musicFile" accept="audio/*">
+      <div class="music-name" id="musicName">Tanlanmasa, standart nog'ora musiqasi ishlaydi.</div>
+    </div>
 
     <div class="setup-msg" id="setupMsg"></div>
     <div class="center">
@@ -1152,7 +1161,7 @@ function startMusic() {
   if (!SND.on) return;
   if (!SND.bgFailed) {
     if (!SND.bg) {
-      SND.bg = new Audio(BG_TRACK);
+      SND.bg = new Audio(SND.customUrl || BG_TRACK);
       SND.bg.loop = true;
       SND.bg.volume = 0.5;
       SND.bg.onerror = () => { SND.bgFailed = true; SND.bg = null; startDrumLoop(); };
@@ -1238,6 +1247,14 @@ $("okBtn").addEventListener("click", () => answer(true));
 $("badBtn").addEventListener("click", () => answer(false));
 $("newBtn").addEventListener("click", newGame);
 $("bigBtn").addEventListener("click", toggleBig);
+$("musicFile").addEventListener("change", e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  if (SND.bg) { SND.bg.pause(); SND.bg = null; }
+  SND.bgFailed = false;
+  SND.customUrl = URL.createObjectURL(f);
+  $("musicName").textContent = "Tanlandi: " + f.name;
+});
 $("soundBtn").addEventListener("click", toggleSound);
 try { SND.on = localStorage.getItem("jumanjiSound") !== "0"; } catch (e) { SND.on = true; }
 applySoundUI();
