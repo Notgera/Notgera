@@ -252,6 +252,13 @@
     font-weight: 600;
   }
   .legend-item svg { width: 30px; height: 30px; flex-shrink: 0; }
+  .legend-ico { width: 34px; height: 34px; flex-shrink: 0; display: block; }
+  .legend-ico svg, .legend-ico img, .medal .pic svg, .medal .pic img {
+    width: 100%; height: 100%; display: block; object-fit: cover;
+  }
+  .legend-ico img { border-radius: 8px; }
+  .medal .pic img { border-radius: 50%; }
+  .pic { display: block; width: 100%; height: 100%; }
   @media (max-width: 560px) {
     .board-wrap { padding: 44px; }
     .medal { width: 46px; height: 46px; }
@@ -572,6 +579,37 @@ const LANDMARK_POS = [
   { left: "calc(100% - 26px)", top: "65%" },    // o'ng pastki
 ];   // yuqori o'rtada yashil shar (orb) turadi
 
+/* Haqiqiy rasmlar (Wikimedia Commons fayl nomlari, LANDMARKS tartibida).
+   Rasm yuklanmasa, yuqoridagi SVG chizma o'rniga qoladi.
+   Har bir rasmning muallifi va litsenziyasi Commons fayl sahifasida ko'rsatilgan. */
+const LANDMARK_IMG = [
+  "Registan_square_Samarkand.jpg",
+  "Ark_fortress_in_Bukhara.jpg",
+  "Kalon_Minaret,_Bukhara_(4933987001).jpg",
+  "Gur-e_Amir_01.jpg",
+  "Chor_minor_from_south.jpg",
+  "Ulugh_Beg_Observatory_02.jpg",
+  "Islom-Hoja_Minaret_(8145421671).jpg",
+  "Gorskii_03978u.jpg",
+];
+function commonsUrl(file) {
+  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file) + "?width=300";
+}
+
+/* SVG chizma darhol ko'rinadi, rasm yuklansa u bilan almashtiriladi */
+function picEl(lm, i) {
+  const span = document.createElement("span");
+  span.className = "pic";
+  span.innerHTML = lm.svg;
+  if (LANDMARK_IMG[i]) {
+    const img = new Image();
+    img.alt = lm.name;
+    img.onload = () => { span.innerHTML = ""; span.appendChild(img); };
+    img.src = commonsUrl(LANDMARK_IMG[i]);
+  }
+  return span;
+}
+
 /* ---------- Holat ---------- */
 let state = null;                 // { teams, current, phase, dice, question, winner }
 let questionBag = [];
@@ -621,7 +659,7 @@ function buildLandmarks() {
     const m = document.createElement("div");
     m.className = "medal";
     m.title = lm.name;
-    m.innerHTML = lm.svg;
+    m.appendChild(picEl(lm, i));
     m.style.left = LANDMARK_POS[i].left;
     m.style.top = LANDMARK_POS[i].top;
     wrap.appendChild(m);
@@ -629,12 +667,18 @@ function buildLandmarks() {
     const item = document.createElement("div");
     item.className = "legend-item";
     const ico = document.createElement("span");
-    ico.innerHTML = lm.svg;
+    ico.className = "legend-ico";
+    ico.appendChild(picEl(lm, i));
     const txt = document.createElement("span");
     txt.textContent = lm.name;
     item.append(ico, txt);
     legend.appendChild(item);
   });
+
+  const credit = document.createElement("div");
+  credit.textContent = "Rasmlar: Wikimedia Commons. Muallif va litsenziya har bir fayl sahifasida ko'rsatilgan.";
+  credit.style.cssText = "grid-column: 1 / -1; font-size: .75rem; opacity: .7; margin-top: 4px;";
+  legend.appendChild(credit);
 }
 
 /* ---------- Dekor: uchib yuruvchi barglar ---------- */
