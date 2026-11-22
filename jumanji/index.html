@@ -575,15 +575,9 @@ const FACES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 const STEP_DELAY = 350;           // har bir qadam orasidagi kutish (ms)
 const LEAF_ICONS = ["🌿", "🍃", "🌴", "🍂", "🌱"];
 const TIME_LIMIT = 15;           // savolga javob berish vaqti (soniya)
-/* Maxsus katakchalar: indeks -> tur. up = +katak, down = -katak, skip = bir navbat o'tkazib yuboriladi */
-const SPECIALS = {
-  5:  { type: "up",   icon: "🦁", delta: 3,  text: "Sher sakradi! +3 katak" },
-  9:  { type: "down", icon: "🐍", delta: -3, text: "Ilon chaqdi! -3 katak" },
-  14: { type: "skip", icon: "🌪", text: "Bo'ron! Bir navbat o'tkazib yuboriladi" },
-  19: { type: "up",   icon: "🦁", delta: 3,  text: "Sher sakradi! +3 katak" },
-  23: { type: "down", icon: "🐍", delta: -3, text: "Ilon chaqdi! -3 katak" },
-  28: { type: "skip", icon: "🌪", text: "Bo'ron! Bir navbat o'tkazib yuboriladi" },
-};
+/* Maxsus katakchalar: indeks -> tur. up = +katak, down = -katak, skip = bir navbat o'tkazib yuboriladi.
+   Hozircha o'chirilgan (bo'sh). Qayta qo'shish uchun shu yerga yoziladi. */
+const SPECIALS = {};
 
 /* ---------- Taxta burchaklaridagi 4 ta tarixiy joy ----------
    name: nomi (sarlavha sifatida)
