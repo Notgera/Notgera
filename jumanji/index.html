@@ -594,6 +594,7 @@ const TXT = {
     timeout: "⏰ Vaqt tugadi! {name} joyida qoladi.", wrong: "❌ Noto'g'ri. {name} joyida qoladi.",
     winner: "🏆 {token} {name} yutdi!", tie: "🏆 Teng: {names}", qEnd: "Savollar tugadi!", allQ: "📚 Barcha savollar tugadi!",
     gameEnd: "O'yin tugadi!", congrats: "🎉 Tabriklaymiz!", cells: "{pos} / {finish} katak", orb: "Jumanji ko'zi",
+    pageTitle: "Jumanji — Jamoaviy dars o'yini",
   },
   en: {
     soundOn: "🔊 Sound", soundOff: "🔇 Sound off", big: "🔍 Large text", langBtn: "🌐 UZ",
@@ -608,6 +609,7 @@ const TXT = {
     timeout: "⏰ Time's up! {name} stays in place.", wrong: "❌ Wrong. {name} stays in place.",
     winner: "🏆 {token} {name} wins!", tie: "🏆 Tie: {names}", qEnd: "Questions are over!", allQ: "📚 All questions are done!",
     gameEnd: "Game over!", congrats: "🎉 Congratulations!", cells: "{pos} / {finish} cells", orb: "Jumanji's eye",
+    pageTitle: "Jumanji — Classroom team game",
   },
 };
 function tr(key, vars = {}) {
@@ -632,7 +634,19 @@ function applyLang() {
   $("bigBtn").textContent = tr("big");
   $("langBtn").textContent = tr("langBtn");
   $("newBtn").textContent = resetArmed ? tr("newArm") : tr("newGame");
-  if (state && state.question) $("qText").textContent = qOf(state.question);
+  document.title = tr("pageTitle");
+  if (state && state.phase === "over") {
+    if (state.endReason === "finish") {
+      $("winnerText").textContent = tr("winner", { token: state.winner.token, name: state.winner.name });
+    } else {
+      const max = Math.max(...state.teams.map(t => t.pos));
+      const leaders = state.teams.filter(t => t.pos === max);
+      $("winnerText").textContent = leaders.length === 1
+        ? tr("winner", { token: leaders[0].token, name: leaders[0].name })
+        : tr("tie", { names: leaders.map(t => t.name).join(", ") });
+    }
+    $("qText").textContent = state.endReason === "questions" ? tr("qEnd") : tr("gameEnd");
+  } else if (state && state.question) $("qText").textContent = qOf(state.question);
   else if (!state) $("qText").textContent = tr("qDefault");
 }
 
@@ -640,6 +654,7 @@ function toggleLang() {
   LANG = LANG === "en" ? "uz" : "en";
   try { localStorage.setItem("jumanjiLang", LANG); } catch (e) { /* ignore */ }
   applyLang();
+  setMsg(state && state.phase === "over" ? tr("congrats") : "", state && state.phase === "over" ? "ok" : undefined);
   if (state) { renderBoard(); renderScore(); render(); }
 }
 /* Maxsus katakchalar: indeks -> tur. up = +katak, down = -katak, skip = bir navbat o'tkazib yuboriladi.
@@ -972,6 +987,7 @@ function endByQuestions() {
   const leaders = state.teams.filter(t => t.pos === max);
   state.phase = "over";
   state.winner = leaders[0];
+  state.endReason = "questions";
   $("winnerText").textContent = leaders.length === 1
     ? tr("winner", { token: leaders[0].token, name: leaders[0].name })
     : tr("tie", { names: leaders.map(t => t.name).join(", ") });
@@ -1134,6 +1150,7 @@ function nextTurn() {
 function finishGame(team) {
   state.phase = "over";
   state.winner = team;
+  state.endReason = "finish";
   $("winnerText").textContent = tr("winner", { token: team.token, name: team.name });
   $("qText").textContent = tr("gameEnd");
   $("qHint").textContent = "";
