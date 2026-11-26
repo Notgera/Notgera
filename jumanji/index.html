@@ -530,42 +530,7 @@
    Mavzu: ekoturizm, ixtisoslashgan joylashtirish, sun'iy intellekt turizmda.
    Format: { q: "savol matni", a: "to'g'ri javob", qEn: "question in English", aEn: "answer in English" }
    ===================================================================== */
-const QUESTIONS = [
-  { q: "Tabiiy hududlarga mas'uliyatli sayohat va tabiatni asrashga qaratilgan turizm turi qanday ataladi?", a: "Ekoturizm", qEn: "What type of tourism promotes responsible travel to natural areas and nature conservation?", aEn: "Ecotourism" },
-  { q: "Barqaror turizm nima?", a: "Hozirgi va kelajak avlodlar uchun tabiat va madaniyatni asrab, mahalliy aholiga foyda keltiradigan turizm", qEn: "What is sustainable tourism?", aEn: "Tourism that preserves nature and culture for present and future generations and benefits local communities" },
-  { q: "Fermer xo'jaligida dam olish turizmi qanday ataladi?", a: "Agroturizm", qEn: "What is holiday tourism spent on a farm called?", aEn: "Agritourism" },
-  { q: "Qadimgi karvonlar dam olgan joy qanday ataladi?", a: "Karvonsaroy", qEn: "What was the name of the place where ancient caravans rested?", aEn: "Caravanserai" },
-  { q: "Tabiatni asrash uchun maxsus ajratilgan hudud qanday ataladi?", a: "Muhofaza etiladigan hudud (qo'riqxona)", qEn: "What is an area specially set aside for nature protection called?", aEn: "Protected area (nature reserve)" },
-  { q: "Turistlarni tabiat bo'ylab olib yuruvchi mutaxassis qanday ataladi?", a: "Gid (yo'riqchi)", qEn: "What is a specialist who leads tourists through nature called?", aEn: "Guide" },
-  { q: "Ma'lum hududda yashaydigan hayvonlar yig'indisi qanday ataladi?", a: "Fauna", qEn: "What is the total of animals living in a given area called?", aEn: "Fauna" },
-  { q: "Ma'lum hududda o'sadigan o'simliklar yig'indisi qanday ataladi?", a: "Flora", qEn: "What is the total of plants growing in a given area called?", aEn: "Flora" },
-  { q: "Xonadon egalari o'z uyini ijaraga beradigan mashhur platforma nomi?", a: "Airbnb", qEn: "What is the famous platform where homeowners rent out their homes called?", aEn: "Airbnb" },
-  { q: "Mahalliy aholi hayoti va urf-odatlari bilan tanishtiradigan turizm turi qanday ataladi?", a: "Madaniy (etno) turizm", qEn: "What type of tourism introduces visitors to local life and customs?", aEn: "Cultural (ethno) tourism" },
-  { q: "Mehmonning bagajini xonasiga olib boradigan xodim qanday ataladi?", a: "Bellboy", qEn: "What is the hotel staff member who carries a guest's luggage to the room called?", aEn: "Bellboy" },
-  { q: "Turistik xizmatlarni paketlarga yig'ib sotadigan tashkilot qanday ataladi?", a: "Turoperator", qEn: "What is the organization that bundles tourist services into packages called?", aEn: "Tour operator" },
-  { q: "Mehmonni aeroport yoki vokzaldan olib boradigan transport xizmati qanday ataladi?", a: "Transfer", qEn: "What transport service takes guests from the airport or station?", aEn: "Transfer" },
-  { q: "Mahalliy ovqat va madaniyatni o'rganadigan turizm qanday ataladi?", a: "Gastronomik turizm", qEn: "What type of tourism explores local food and culture?", aEn: "Gastronomic tourism" },
-  { q: "Joyni uyda turib 3D ko'rish imkonini beradigan texnologiya qanday ataladi?", a: "Virtual tur", qEn: "What technology lets you view a place in 3D from home?", aEn: "Virtual tour" },
-  { q: "Tarixiy yodgorlikni asl holiga keltirish ishi qanday ataladi?", a: "Restavratsiya", qEn: "What is the work of restoring a historical monument to its original state called?", aEn: "Restoration" },
-  { q: "Mijozlarni o'xshash guruhlarga ajratish usuli qanday ataladi?", a: "Segmentatsiya", qEn: "What is the method of dividing customers into similar groups called?", aEn: "Segmentation" },
-  { q: "Tabiatda chodir tikib dam olish qanday ataladi?", a: "Kemping", qEn: "What is spending time camping in tents in nature called?", aEn: "Camping" },
-  { q: "Energiya va suvni tejaydigan mehmonxona qanday ataladi?", a: "Yashil mehmonxona", qEn: "What is a hotel that saves energy and water called?", aEn: "Green hotel" },
-  { q: "Mehmonxona xodimlari ishini boshqaradigan bo'lim qanday ataladi?", a: "Kadrlar bo'limi", qEn: "What department manages the hotel's staff?", aEn: "Human resources department" },
-  { q: "Suv havzasi yonidagi dam olish zonasi qanday ataladi?", a: "Plyaj", qEn: "What is a recreation area by a body of water called?", aEn: "Beach" },
-  { q: "Margilon qaysi ipak mato turi bilan mashhur?", a: "Atlas", qEn: "Margilan is famous for which type of silk fabric?", aEn: "Atlas" },
-  { q: "Mamlakat ichida sayohat qilish qanday turizm turi?", a: "Ichki turizm", qEn: "What type of tourism is travel within one's own country?", aEn: "Domestic tourism" },
-  { q: "\"All inclusive\" va \"half board\" o'rtasidagi amaliy farq nimada?", a: "All inclusive ovqat va asosiy ichimliklarni, half board esa faqat nonushta va kechki ovqatni o'z ichiga oladi", qEn: "What is the practical difference between 'all inclusive' and 'half board'?", aEn: "All inclusive covers meals and main drinks; half board covers only breakfast and dinner" },
-  { q: "Turoperator va turagent o'rtasidagi asosiy farq nimada?", a: "Turoperator paket tuzadi, turagent xizmatni sotadi", qEn: "What is the main difference between a tour operator and a travel agent?", aEn: "A tour operator creates packages; a travel agent sells services" },
-  { q: "\"All inclusive\" tizimi nimani anglatadi?", a: "Yashash, ovqatlanish va asosiy ichimliklar bitta narxga kiradi", qEn: "What does the 'all inclusive' system mean?", aEn: "Accommodation, meals and main drinks are included in one price" },
-  { q: "MICE turizmi qanday tadbirlarni o'z ichiga oladi?", a: "Yig'ilish, rag'batlantirish, konferensiya va ko'rgazmalar", qEn: "What events does MICE tourism include?", aEn: "Meetings, incentives, conferences and exhibitions" },
-  { q: "\"Tirik muzey\" deb qayerda aytiladi?", a: "Xiva (Ichan qal'a)", qEn: "Where is a place called a 'living museum'?", aEn: "Khiva (Itchan Kala)" },
-  { q: "G'orlarga qiziqish bilan qilinadigan sayohat qanday ataladi?", a: "Speleoturizm", qEn: "What is travel to explore caves called?", aEn: "Speleotourism" },
-  { q: "Umumiy yotoqxonali arzon turar joy qanday ataladi?", a: "Hostel", qEn: "What is cheap shared-dormitory accommodation called?", aEn: "Hostel" },
-  { q: "Davolanish maqsadidagi sayohat qanday ataladi?", a: "Tibbiy turizm", qEn: "What is travel for medical treatment called?", aEn: "Medical tourism" },
-  { q: "Dengiz yoki ko'lda ko'p kunlik kemada sayohat qanday ataladi?", a: "Kruiz (cruise)", qEn: "What is a multi-day voyage on a sea or lake ship called?", aEn: "Cruise" },
-  { q: "Rishton qaysi hunar bilan mashhur?", a: "Keramika (kulolchilik)", qEn: "Rishton is famous for which craft?", aEn: "Ceramics (pottery)" },
-  { q: "Yog'och yoki engil konstruksiyali alohida kichik dam olish uyi qanday ataladi?", a: "Bungalo", qEn: "What is a separate small holiday house of wood or light construction called?", aEn: "Bungalow" },
-];
+const QUESTIONS = [];
 
 /* ---------- Sozlamalar ---------- */
 const TOKENS = ["🦁", "🐒", "🐍", "🦜", "🐘", "🦒"];
@@ -811,10 +776,11 @@ function renderSetup() {
     row.append(badge, name, tok);
     box.appendChild(row);
   }
-  $("setupMsg").textContent = "";
+  $("setupMsg").textContent = QUESTIONS.length === 0 ? tr("noQuestions") : "";
 }
 
 function startGame() {
+  if (QUESTIONS.length === 0) { $("setupMsg").textContent = tr("noQuestions"); return; }
   const rows = [...document.querySelectorAll(".team-row")];
   const teams = rows.map((r, i) => ({
     name: r.querySelector("[data-name]").value.trim() || tr("teamDefault", { n: i + 1 }),
