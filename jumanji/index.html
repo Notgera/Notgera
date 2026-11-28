@@ -1359,10 +1359,10 @@ function toggleSound() {
 
 
 /* ---------- Akkaunt va bulutli o'yinlar (Supabase) ---------- */
-/* Quyidagi ikki qiymatni o'zingizning Supabase loyihangizdan qo'ying. Faqat "anon" (public) kalit.
-   service_role kalitini bu yerga HECH QACHON qo'ymang. */
-const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+/* Supabase loyiha manzili va ochiq (publishable) kalit. Maxfiy (secret / service_role) kalit
+   bu yerga HECH QACHON qo'yilmaydi. */
+const SUPABASE_URL = "https://exurgvbzvtlpfrvbwcuf.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_6ymnBuhfHNM-Z2oIzT5zGQ_MkJB17M8";
 let sb = null;
 let games = [];         // [{id, name, questions:[{q,a}]}]
 let activeGame = null;  // tanlangan o'yin
