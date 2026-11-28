@@ -593,7 +593,9 @@
   </div>
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 /* =====================================================================
    SAVOLLAR — shu yerni o'zgartiring.
@@ -633,7 +635,7 @@ const TXT = {
     authTitle: "Kirish", email: "Email", password: "Parol", login: "Kirish", signup: "Ro'yxatdan o'tish",
     google: "🔐 Google bilan kirish", authNeed: "Email kiriting va kamida 6 belgili parol yozing.",
     checkMail: "Emailingizga tasdiqlash xati yuborildi. Tasdiqlab, keyin kiring.",
-    noCloud: "Bulut sozlanmagan: SUPABASE_URL va SUPABASE_ANON_KEY ni kiriting.",
+    noCloud: "Bulut sozlanmagan: FIREBASE_CONFIG ni kiriting.",
     menuTitle: "Menyu", goCreate: "🛠 O'yin yaratish", goPlay: "▶ O'yinni boshlash", logout: "Chiqish",
     gamesTitle: "Saqlangan o'yinlar", noGames: "Hali o'yin yaratilmagan. Avval 'O'yin yaratish'ni bosing.",
     playBtn: "▶ Boshlash", editBtn: "✏️ Tahrirlash", delBtn: "🗑 O'chirish", sure: "Yana bosing: o'chirish",
@@ -660,7 +662,7 @@ const TXT = {
     authTitle: "Sign in", email: "Email", password: "Password", login: "Sign in", signup: "Sign up",
     google: "🔐 Sign in with Google", authNeed: "Enter an email and a password of at least 6 characters.",
     checkMail: "A confirmation email was sent. Confirm it, then sign in.",
-    noCloud: "Cloud is not configured: set SUPABASE_URL and SUPABASE_ANON_KEY.",
+    noCloud: "Cloud is not configured: set FIREBASE_CONFIG.",
     menuTitle: "Menu", goCreate: "🛠 Create a game", goPlay: "▶ Play a game", logout: "Sign out",
     gamesTitle: "Saved games", noGames: "No games yet. Press 'Create a game' first.",
     playBtn: "▶ Start", editBtn: "✏️ Edit", delBtn: "🗑 Delete", sure: "Press again to delete",
@@ -1358,20 +1360,28 @@ function toggleSound() {
 }
 
 
-/* ---------- Akkaunt va bulutli o'yinlar (Supabase) ---------- */
-/* Supabase loyiha manzili va ochiq (publishable) kalit. Maxfiy (secret / service_role) kalit
-   bu yerga HECH QACHON qo'yilmaydi. */
-const SUPABASE_URL = "https://exurgvbzvtlpfrvbwcuf.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_6ymnBuhfHNM-Z2oIzT5zGQ_MkJB17M8";
-let sb = null;
-let games = [];         // [{id, name, questions:[{q,a}]}]
+/* ---------- Akkaunt va bulutli o'yinlar (Firebase) ---------- */
+/* Firebase loyiha sozlamalari (Project settings → General → Your apps → Web app → config).
+   Bu ma'lumotlar ochiq bo'lishi mumkin, maxfiy emas. */
+const FIREBASE_CONFIG = {
+  apiKey: "YOUR-API-KEY",
+  authDomain: "YOUR-PROJECT.firebaseapp.com",
+  projectId: "YOUR-PROJECT",
+  storageBucket: "YOUR-PROJECT.appspot.com",
+  messagingSenderId: "YOUR-SENDER-ID",
+  appId: "YOUR-APP-ID",
+};
+let auth = null;
+let db = null;
+let currentUid = null;
+let games = [];         // [{id, name, createdAt, questions:[{q,a}]}]
 let activeGame = null;  // tanlangan o'yin
 let draft = null;       // tahrirlanayotgan o'yin: {id, name, list:[{q,a}]}
 let editIndex = -1;     // tahrirlanayotgan savol indeksi (-1 = yangi qo'shish)
 let deleteArmed = null; // o'chirish tasdig'i uchun
 
 function cloudReady() {
-  return !SUPABASE_URL.includes("YOUR-PROJECT") && typeof window.supabase !== "undefined";
+  return !FIREBASE_CONFIG.apiKey.startsWith("YOUR") && typeof window.firebase !== "undefined";
 }
 function mkBtn(text, cls, fn) {
   const b = document.createElement("button");
@@ -1383,23 +1393,38 @@ function mkBtn(text, cls, fn) {
 function setAuthMsg(text) { $("authMsg").textContent = text; }
 
 async function loadGames() {
-  const { data, error } = await sb.from("games")
-    .select("id,name,created_at,questions(pos,q,a)")
-    .order("created_at", { ascending: true });
-  if (error) { games = []; $("gamesMsg").textContent = error.message; return; }
-  games = data.map(g => ({
-    id: g.id,
-    name: g.name,
-    questions: (g.questions || []).slice().sort((x, y) => x.pos - y.pos).map(x => ({ q: x.q, a: x.a })),
-  }));
+  const snap = await db.collection("games").where("owner", "==", currentUid).get();
+  games = snap.docs.map(d => {
+    const x = d.data();
+    return {
+      id: d.id,
+      name: x.name,
+      createdAt: x.createdAt || 0,
+      questions: (x.questions || []).map(q => ({ q: q.q, a: q.a })),
+    };
+  }).sort((x, y) => x.createdAt - y.createdAt);
 }
 
-async function refreshSession() {
-  const { data, error } = await sb.auth.getSession();
-  if (error) { setAuthMsg(error.message); show("auth"); return; }
-  if (!data.session) { show("auth"); return; }
-  $("userLine").textContent = data.session.user.email || "";
-  await loadGames();
+/* Kirish yoki chiqish bo'lganda avtomatik chaqiriladi */
+async function handleUser(user) {
+  if (!user) {
+    currentUid = null;
+    games = [];
+    activeGame = null;
+    draft = null;
+    $("authPass").value = "";
+    show("auth");
+    return;
+  }
+  currentUid = user.uid;
+  $("userLine").textContent = user.email || "";
+  try {
+    await loadGames();
+    $("gamesMsg").textContent = "";
+  } catch (e) {
+    $("gamesMsg").textContent = e.message;
+  }
+  renderGamesList();
   show("menu");
 }
 
@@ -1407,31 +1432,27 @@ async function doAuth(kind) {
   const email = $("authEmail").value.trim();
   const password = $("authPass").value;
   if (!email || password.length < 6) { setAuthMsg(tr("authNeed")); return; }
-  const res = kind === "signup"
-    ? await sb.auth.signUp({ email, password })
-    : await sb.auth.signInWithPassword({ email, password });
-  if (res.error) { setAuthMsg(res.error.message); return; }
-  if (kind === "signup" && !res.data.session) { setAuthMsg(tr("checkMail")); return; }
-  setAuthMsg("");
-  $("authPass").value = "";
-  await refreshSession();
+  try {
+    if (kind === "signup") await auth.createUserWithEmailAndPassword(email, password);
+    else await auth.signInWithEmailAndPassword(email, password);
+    setAuthMsg("");
+    $("authPass").value = "";
+  } catch (e) {
+    setAuthMsg(e.message);
+  }
 }
 
 async function doGoogle() {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: window.location.href.split("#")[0] },
-  });
-  if (error) setAuthMsg(error.message);
+  try {
+    await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    setAuthMsg("");
+  } catch (e) {
+    setAuthMsg(e.message);
+  }
 }
 
 async function doLogout() {
-  await sb.auth.signOut();
-  games = [];
-  activeGame = null;
-  draft = null;
-  $("authPass").value = "";
-  show("auth");
+  await auth.signOut();
 }
 
 /* O'yinlar ro'yxati */
@@ -1466,10 +1487,13 @@ async function armDelete(btn, g) {
     return;
   }
   deleteArmed = null;
-  const { error } = await sb.from("games").delete().eq("id", g.id);
-  if (error) { $("gamesMsg").textContent = error.message; return; }
-  await loadGames();
-  renderGamesList();
+  try {
+    await db.collection("games").doc(g.id).delete();
+    await loadGames();
+    renderGamesList();
+  } catch (e) {
+    $("gamesMsg").textContent = e.message;
+  }
 }
 
 /* O'yinni tanlab boshlash: savollar shu o'yindan olinadi */
@@ -1546,36 +1570,29 @@ async function saveGame() {
   const btn = $("saveGameBtn");
   btn.disabled = true;
   try {
-    let id = draft.id;
-    if (id) {
-      const u = await sb.from("games").update({ name }).eq("id", id);
-      if (u.error) throw u.error;
-      const d = await sb.from("questions").delete().eq("game_id", id);
-      if (d.error) throw d.error;
+    const payload = { name, questions: draft.list.map(x => ({ q: x.q, a: x.a })) };
+    if (draft.id) {
+      await db.collection("games").doc(draft.id).update(payload);
     } else {
-      const ins = await sb.from("games").insert({ name }).select("id").single();
-      if (ins.error) throw ins.error;
-      id = ins.data.id;
+      await db.collection("games").add({ ...payload, owner: currentUid, createdAt: Date.now() });
     }
-    const rows = draft.list.map((x, i) => ({ game_id: id, pos: i, q: x.q, a: x.a }));
-    const q = await sb.from("questions").insert(rows);
-    if (q.error) throw q.error;
     await loadGames();
     renderGamesList();
     $("gamesMsg").textContent = tr("saved");
     show("gamesList");
   } catch (e) {
-    $("editorMsg").textContent = e.message || String(e);
+    $("editorMsg").textContent = e.message;
   } finally {
     btn.disabled = false;
   }
 }
 
-async function boot() {
+function boot() {
   if (!cloudReady()) { setAuthMsg(tr("noCloud")); show("auth"); return; }
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  try { await refreshSession(); }
-  catch (e) { setAuthMsg(e.message || String(e)); show("auth"); }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  auth.onAuthStateChanged(handleUser);
 }
 
 $("loginBtn").addEventListener("click", () => doAuth("login"));
