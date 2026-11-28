@@ -84,7 +84,7 @@
   }
   .card h2.title { margin: 0 0 18px; font-size: 1.5rem; text-align: center; color: var(--gold); }
   .card label { display: block; margin: 0 0 6px; font-weight: 700; font-size: .95rem; opacity: .9; }
-  select, input[type="text"] {
+  select, input[type="text"], input[type="email"], input[type="password"] {
     font: inherit;
     padding: 11px 12px;
     border-radius: 12px;
@@ -94,7 +94,7 @@
     outline: none;
     transition: border-color .2s, box-shadow .2s;
   }
-  select:focus, input[type="text"]:focus {
+  select:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
     border-color: var(--gold);
     box-shadow: 0 0 0 4px rgba(255,209,102,.25);
   }
@@ -115,6 +115,9 @@
   }
   .team-row input[type="text"] { flex: 1; min-width: 0; }
   .team-row select { font-size: 1.5rem; padding: 4px 8px; }
+  ul.qlist { list-style: decimal; padding-left: 22px; margin: 8px 0; }
+  ul.qlist li { margin: 6px 0; line-height: 1.4; }
+  ul.qlist li button { margin-left: 6px; padding: 2px 8px; min-width: 0; }
   .setup-msg { color: #ffb3a8; min-height: 1.4em; margin-top: 12px; text-align: center; font-weight: 600; }
 
   /* ---------- Tugmalar ---------- */
@@ -442,10 +445,76 @@
   <h1>JUNGLE DICE</h1>
 </header>
 
+<!-- ============ KIRISH ============ -->
+<section id="auth" class="screen active">
+  <div class="card">
+    <h2 class="title" data-i18n="authTitle">Kirish</h2>
+    <label for="authEmail" data-i18n="email">Email</label>
+    <input id="authEmail" type="email" autocomplete="email">
+    <label for="authPass" data-i18n="password">Parol</label>
+    <input id="authPass" type="password" autocomplete="current-password">
+    <div class="btns">
+      <button class="btn-gold" id="loginBtn" data-i18n="login">Kirish</button>
+      <button class="btn-ghost" id="signupBtn" data-i18n="signup">Ro'yxatdan o'tish</button>
+    </div>
+    <div class="center"><button class="btn-ghost" id="googleBtn" data-i18n="google">🔐 Google bilan kirish</button></div>
+    <div class="setup-msg" id="authMsg"></div>
+  </div>
+</section>
+
+<!-- ============ MENYU ============ -->
+<section id="menu" class="screen">
+  <div class="card">
+    <h2 class="title" data-i18n="menuTitle">Menyu</h2>
+    <p class="small" id="userLine" style="text-align:center"></p>
+    <div class="btns single">
+      <button class="btn-gold" id="goCreate" data-i18n="goCreate">🛠 O'yin yaratish</button>
+    </div>
+    <div class="btns single" style="margin-top:10px">
+      <button class="btn-gold" id="goPlay" data-i18n="goPlay">▶ O'yinni boshlash</button>
+    </div>
+    <div class="center"><button class="btn-ghost" id="logoutBtn" data-i18n="logout">Chiqish</button></div>
+  </div>
+</section>
+
+<!-- ============ SAQLANGAN O'YINLAR ============ -->
+<section id="gamesList" class="screen">
+  <div class="card">
+    <h2 class="title" data-i18n="gamesTitle">Saqlangan o'yinlar</h2>
+    <ul class="score" id="gamesUl"></ul>
+    <div class="setup-msg" id="gamesMsg"></div>
+    <div class="center"><button class="btn-ghost" id="gamesBack" data-i18n="back">⬅ Orqaga</button></div>
+  </div>
+</section>
+
+<!-- ============ O'YIN YARATISH / TAHRIRLASH ============ -->
+<section id="editor" class="screen">
+  <div class="card">
+    <h2 class="title" id="editorTitle" data-i18n="newTitle">Yangi o'yin</h2>
+    <label for="gameName" data-i18n="gameName">O'yin nomi</label>
+    <input id="gameName" type="text" maxlength="60">
+    <label for="qInput" data-i18n="question">Savol</label>
+    <input id="qInput" type="text">
+    <label for="aInput" data-i18n="answer">Javob</label>
+    <input id="aInput" type="text">
+    <div class="btns">
+      <button class="btn-gold" id="addQBtn">➕ Qo'shish</button>
+    </div>
+    <div class="setup-msg" id="editorMsg"></div>
+    <p class="small" id="qCount" style="margin-top:14px"></p>
+    <ol class="qlist" id="qList"></ol>
+    <div class="btns" style="margin-top:14px">
+      <button class="btn-ghost" id="editorBack" data-i18n="back">⬅ Orqaga</button>
+      <button class="btn-gold" id="saveGameBtn" data-i18n="saveGame">💾 Saqlash</button>
+    </div>
+  </div>
+</section>
+
 <!-- ============ 1-EKRAN: SOZLASH ============ -->
-<section id="setup" class="screen active">
+<section id="setup" class="screen">
   <div class="card">
     <h2 class="title" data-i18n="setupTitle">Jamoa sozlamalari</h2>
+    <div class="center" style="margin:0 0 12px"><button class="btn-ghost" id="setupBack" data-i18n="back">⬅ Orqaga</button></div>
 
     <label for="teamCount" data-i18n="teamCount">Jamoalar soni</label>
     <select id="teamCount">
@@ -524,13 +593,14 @@
   </div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* =====================================================================
    SAVOLLAR — shu yerni o'zgartiring.
    Mavzu: ekoturizm, ixtisoslashgan joylashtirish, sun'iy intellekt turizmda.
    Format: { q: "savol matni", a: "to'g'ri javob", qEn: "question in English", aEn: "answer in English" }
    ===================================================================== */
-const QUESTIONS = [];
+let QUESTIONS = [];   // tanlangan o'yinning savollari (bulutdan yuklanadi)
 
 /* ---------- Sozlamalar ---------- */
 const TOKENS = ["🦁", "🐒", "🐍", "🦜", "🐘", "🦒"];
@@ -560,6 +630,18 @@ const TXT = {
     winner: "🏆 {token} {name} yutdi!", tie: "🏆 Teng: {names}", qEnd: "Savollar tugadi!", allQ: "📚 Barcha savollar tugadi!",
     gameEnd: "O'yin tugadi!", congrats: "🎉 Tabriklaymiz!", cells: "{pos} / {finish} katak", orb: "Jungle ko'zi",
     pageTitle: "Jungle Dice — Jamoaviy dars o'yini",
+    authTitle: "Kirish", email: "Email", password: "Parol", login: "Kirish", signup: "Ro'yxatdan o'tish",
+    google: "🔐 Google bilan kirish", authNeed: "Email kiriting va kamida 6 belgili parol yozing.",
+    checkMail: "Emailingizga tasdiqlash xati yuborildi. Tasdiqlab, keyin kiring.",
+    noCloud: "Bulut sozlanmagan: SUPABASE_URL va SUPABASE_ANON_KEY ni kiriting.",
+    menuTitle: "Menyu", goCreate: "🛠 O'yin yaratish", goPlay: "▶ O'yinni boshlash", logout: "Chiqish",
+    gamesTitle: "Saqlangan o'yinlar", noGames: "Hali o'yin yaratilmagan. Avval 'O'yin yaratish'ni bosing.",
+    playBtn: "▶ Boshlash", editBtn: "✏️ Tahrirlash", delBtn: "🗑 O'chirish", sure: "Yana bosing: o'chirish",
+    back: "⬅ Orqaga", editorTitle: "O'yin", newTitle: "Yangi o'yin", editTitle: "O'yinni tahrirlash",
+    gameName: "O'yin nomi", question: "Savol", answer: "Javob", addQ: "➕ Qo'shish", saveQ: "✅ O'zgarishni saqlash",
+    qCount: "Savollar soni: {n}", needQA: "Savol va javobni to'ldiring.", needName: "O'yin nomini kiriting.",
+    needOne: "Kamida bitta savol qo'shing.", saveGame: "💾 Saqlash", saved: "Saqlandi.",
+    gamesCount: "{name} ({n} ta savol)",
   },
   en: {
     soundOn: "🔊 Sound", soundOff: "🔇 Sound off", big: "🔍 Large text", langBtn: "🌐 UZ",
@@ -575,6 +657,18 @@ const TXT = {
     winner: "🏆 {token} {name} wins!", tie: "🏆 Tie: {names}", qEnd: "Questions are over!", allQ: "📚 All questions are done!",
     gameEnd: "Game over!", congrats: "🎉 Congratulations!", cells: "{pos} / {finish} cells", orb: "Jungle's eye",
     pageTitle: "Jungle Dice — Classroom team game",
+    authTitle: "Sign in", email: "Email", password: "Password", login: "Sign in", signup: "Sign up",
+    google: "🔐 Sign in with Google", authNeed: "Enter an email and a password of at least 6 characters.",
+    checkMail: "A confirmation email was sent. Confirm it, then sign in.",
+    noCloud: "Cloud is not configured: set SUPABASE_URL and SUPABASE_ANON_KEY.",
+    menuTitle: "Menu", goCreate: "🛠 Create a game", goPlay: "▶ Play a game", logout: "Sign out",
+    gamesTitle: "Saved games", noGames: "No games yet. Press 'Create a game' first.",
+    playBtn: "▶ Start", editBtn: "✏️ Edit", delBtn: "🗑 Delete", sure: "Press again to delete",
+    back: "⬅ Back", editorTitle: "Game", newTitle: "New game", editTitle: "Edit game",
+    gameName: "Game name", question: "Question", answer: "Answer", addQ: "➕ Add", saveQ: "✅ Save change",
+    qCount: "Questions: {n}", needQA: "Fill in the question and the answer.", needName: "Enter a game name.",
+    needOne: "Add at least one question.", saveGame: "💾 Save", saved: "Saved.",
+    gamesCount: "{name} ({n} questions)",
   },
 };
 function tr(key, vars = {}) {
@@ -613,6 +707,7 @@ function applyLang() {
     $("qText").textContent = state.endReason === "questions" ? tr("qEnd") : tr("gameEnd");
   } else if (state && state.question) $("qText").textContent = qOf(state.question);
   else if (!state) $("qText").textContent = tr("qDefault");
+  if (draft) $("editorTitle").textContent = draft.id ? tr("editTitle") : tr("newTitle");
 }
 
 function toggleLang() {
@@ -621,6 +716,8 @@ function toggleLang() {
   applyLang();
   setMsg(state && state.phase === "over" ? tr("congrats") : "", state && state.phase === "over" ? "ok" : undefined);
   if (state) { renderBoard(); renderScore(); render(); }
+  renderGamesList();
+  if (draft) renderEditor();
 }
 /* Maxsus katakchalar: indeks -> tur. up = +katak, down = -katak, skip = bir navbat o'tkazib yuboriladi.
    icon taxtada ko'rsatilmaydi, faqat xabar matnida ishlatiladi. */
@@ -1260,6 +1357,239 @@ function toggleSound() {
   try { localStorage.setItem("jumanjiSound", SND.on ? "1" : "0"); } catch (e) { /* ignore */ }
 }
 
+
+/* ---------- Akkaunt va bulutli o'yinlar (Supabase) ---------- */
+/* Quyidagi ikki qiymatni o'zingizning Supabase loyihangizdan qo'ying. Faqat "anon" (public) kalit.
+   service_role kalitini bu yerga HECH QACHON qo'ymang. */
+const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+let sb = null;
+let games = [];         // [{id, name, questions:[{q,a}]}]
+let activeGame = null;  // tanlangan o'yin
+let draft = null;       // tahrirlanayotgan o'yin: {id, name, list:[{q,a}]}
+let editIndex = -1;     // tahrirlanayotgan savol indeksi (-1 = yangi qo'shish)
+let deleteArmed = null; // o'chirish tasdig'i uchun
+
+function cloudReady() {
+  return !SUPABASE_URL.includes("YOUR-PROJECT") && typeof window.supabase !== "undefined";
+}
+function mkBtn(text, cls, fn) {
+  const b = document.createElement("button");
+  b.className = cls;
+  b.textContent = text;
+  b.addEventListener("click", fn);
+  return b;
+}
+function setAuthMsg(text) { $("authMsg").textContent = text; }
+
+async function loadGames() {
+  const { data, error } = await sb.from("games")
+    .select("id,name,created_at,questions(pos,q,a)")
+    .order("created_at", { ascending: true });
+  if (error) { games = []; $("gamesMsg").textContent = error.message; return; }
+  games = data.map(g => ({
+    id: g.id,
+    name: g.name,
+    questions: (g.questions || []).slice().sort((x, y) => x.pos - y.pos).map(x => ({ q: x.q, a: x.a })),
+  }));
+}
+
+async function refreshSession() {
+  const { data, error } = await sb.auth.getSession();
+  if (error) { setAuthMsg(error.message); show("auth"); return; }
+  if (!data.session) { show("auth"); return; }
+  $("userLine").textContent = data.session.user.email || "";
+  await loadGames();
+  show("menu");
+}
+
+async function doAuth(kind) {
+  const email = $("authEmail").value.trim();
+  const password = $("authPass").value;
+  if (!email || password.length < 6) { setAuthMsg(tr("authNeed")); return; }
+  const res = kind === "signup"
+    ? await sb.auth.signUp({ email, password })
+    : await sb.auth.signInWithPassword({ email, password });
+  if (res.error) { setAuthMsg(res.error.message); return; }
+  if (kind === "signup" && !res.data.session) { setAuthMsg(tr("checkMail")); return; }
+  setAuthMsg("");
+  $("authPass").value = "";
+  await refreshSession();
+}
+
+async function doGoogle() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.href.split("#")[0] },
+  });
+  if (error) setAuthMsg(error.message);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  games = [];
+  activeGame = null;
+  draft = null;
+  $("authPass").value = "";
+  show("auth");
+}
+
+/* O'yinlar ro'yxati */
+function renderGamesList() {
+  const ul = $("gamesUl");
+  ul.innerHTML = "";
+  $("gamesMsg").textContent = games.length ? "" : tr("noGames");
+  games.forEach(g => {
+    const li = document.createElement("li");
+    const head = document.createElement("div");
+    head.className = "sc-head";
+    head.textContent = tr("gamesCount", { name: g.name, n: g.questions.length });
+    const row = document.createElement("div");
+    row.className = "btns";
+    row.append(
+      mkBtn(tr("playBtn"), "btn-gold", () => startWithGame(g)),
+      mkBtn(tr("editBtn"), "btn-ghost", () => openEditor(g)),
+      mkBtn(tr("delBtn"), "btn-ghost", function () { armDelete(this, g); })
+    );
+    li.append(head, row);
+    ul.appendChild(li);
+  });
+}
+
+async function armDelete(btn, g) {
+  if (deleteArmed !== g.id) {
+    deleteArmed = g.id;
+    btn.textContent = tr("sure");
+    setTimeout(() => {
+      if (deleteArmed === g.id) { deleteArmed = null; btn.textContent = tr("delBtn"); }
+    }, 3000);
+    return;
+  }
+  deleteArmed = null;
+  const { error } = await sb.from("games").delete().eq("id", g.id);
+  if (error) { $("gamesMsg").textContent = error.message; return; }
+  await loadGames();
+  renderGamesList();
+}
+
+/* O'yinni tanlab boshlash: savollar shu o'yindan olinadi */
+function startWithGame(g) {
+  activeGame = g;
+  QUESTIONS = g.questions.map(x => ({ q: x.q, a: x.a, qEn: x.q, aEn: x.a }));
+  renderSetup();
+  show("setup");
+}
+
+/* O'yin yaratish / tahrirlash */
+function openEditor(g) {
+  draft = g
+    ? { id: g.id, name: g.name, list: g.questions.map(x => ({ q: x.q, a: x.a })) }
+    : { id: null, name: "", list: [] };
+  editIndex = -1;
+  $("gameName").value = draft.name;
+  $("qInput").value = "";
+  $("aInput").value = "";
+  $("editorMsg").textContent = "";
+  $("editorTitle").textContent = g ? tr("editTitle") : tr("newTitle");
+  renderEditor();
+  show("editor");
+}
+
+function renderEditor() {
+  $("addQBtn").textContent = editIndex >= 0 ? tr("saveQ") : tr("addQ");
+  $("qCount").textContent = tr("qCount", { n: draft.list.length });
+  const ol = $("qList");
+  ol.innerHTML = "";
+  draft.list.forEach((item, i) => {
+    const li = document.createElement("li");
+    const txt = document.createElement("span");
+    txt.textContent = `${item.q} — ${item.a}`;
+    li.append(txt,
+      mkBtn("✏️", "btn-ghost", () => editQ(i)),
+      mkBtn("🗑", "btn-ghost", () => deleteQ(i)));
+    ol.appendChild(li);
+  });
+}
+
+function editQ(i) {
+  editIndex = i;
+  $("qInput").value = draft.list[i].q;
+  $("aInput").value = draft.list[i].a;
+  $("qInput").focus();
+  renderEditor();
+}
+
+function deleteQ(i) {
+  draft.list.splice(i, 1);
+  if (editIndex === i) { editIndex = -1; $("qInput").value = ""; $("aInput").value = ""; }
+  else if (editIndex > i) editIndex--;
+  renderEditor();
+}
+
+function addOrUpdateQ() {
+  const q = $("qInput").value.trim();
+  const a = $("aInput").value.trim();
+  if (!q || !a) { $("editorMsg").textContent = tr("needQA"); return; }
+  if (editIndex >= 0) { draft.list[editIndex] = { q, a }; editIndex = -1; }
+  else draft.list.push({ q, a });
+  $("qInput").value = "";
+  $("aInput").value = "";
+  $("editorMsg").textContent = "";
+  renderEditor();
+  $("qInput").focus();
+}
+
+async function saveGame() {
+  const name = $("gameName").value.trim();
+  if (!name) { $("editorMsg").textContent = tr("needName"); return; }
+  if (!draft.list.length) { $("editorMsg").textContent = tr("needOne"); return; }
+  const btn = $("saveGameBtn");
+  btn.disabled = true;
+  try {
+    let id = draft.id;
+    if (id) {
+      const u = await sb.from("games").update({ name }).eq("id", id);
+      if (u.error) throw u.error;
+      const d = await sb.from("questions").delete().eq("game_id", id);
+      if (d.error) throw d.error;
+    } else {
+      const ins = await sb.from("games").insert({ name }).select("id").single();
+      if (ins.error) throw ins.error;
+      id = ins.data.id;
+    }
+    const rows = draft.list.map((x, i) => ({ game_id: id, pos: i, q: x.q, a: x.a }));
+    const q = await sb.from("questions").insert(rows);
+    if (q.error) throw q.error;
+    await loadGames();
+    renderGamesList();
+    $("gamesMsg").textContent = tr("saved");
+    show("gamesList");
+  } catch (e) {
+    $("editorMsg").textContent = e.message || String(e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function boot() {
+  if (!cloudReady()) { setAuthMsg(tr("noCloud")); show("auth"); return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  try { await refreshSession(); }
+  catch (e) { setAuthMsg(e.message || String(e)); show("auth"); }
+}
+
+$("loginBtn").addEventListener("click", () => doAuth("login"));
+$("signupBtn").addEventListener("click", () => doAuth("signup"));
+$("googleBtn").addEventListener("click", doGoogle);
+$("logoutBtn").addEventListener("click", doLogout);
+$("goCreate").addEventListener("click", () => openEditor(null));
+$("goPlay").addEventListener("click", () => { renderGamesList(); show("gamesList"); });
+$("gamesBack").addEventListener("click", () => show("menu"));
+$("editorBack").addEventListener("click", () => show("menu"));
+$("setupBack").addEventListener("click", () => { renderGamesList(); show("gamesList"); });
+$("addQBtn").addEventListener("click", addOrUpdateQ);
+$("saveGameBtn").addEventListener("click", saveGame);
+
 /* ---------- Ishga tushirish ---------- */
 $("teamCount").addEventListener("change", renderSetup);
 $("startBtn").addEventListener("click", startGame);
@@ -1284,6 +1614,7 @@ makeLeaves();
 buildBoard();
 buildLandmarks();
 renderSetup();
+boot();
 </script>
 </body>
 </html>
